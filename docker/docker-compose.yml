@@ -1,0 +1,27 @@
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:15
+    restart: always
+    ports:
+      - "5432:5432"
+    env_file:
+      - ../.env
+    healthcheck:
+      test: [ "CMD-SHELL", "sh -c 'pg_isready -d postgres' || exit 1" ]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 3s
+  app:
+    container_name: app
+    restart: always
+    build:
+      context: ../.
+    env_file:
+      - ../.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8000:8000"

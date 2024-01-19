@@ -1,0 +1,9 @@
+[flake8]
+exclude =
+    *migrations*
+    *.git
+    */__pycache__/*
+max-line-length=100
+ignore = F401, F403, A003, VNE003
+max-cognitive-complexity=8
+inline-quotes = '
