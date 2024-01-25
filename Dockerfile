@@ -1,11 +1,11 @@
-FROM python:3.11-slim-buster
+FROM python:3.10-slim
 
 ENV PYTHONDONTWRITEBYTEDECODE 1
 ENV PYTHONUNBUFFERED 1
 
 RUN mkdir /app
 
-COPY ./pyproject.toml /app/pyproject.toml
+COPY ./docker/pyproject.toml /app/pyproject.toml
 COPY ./docker/entrypoint.sh /app/entrypoint.sh
 
 RUN apt update \

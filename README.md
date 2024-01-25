@@ -11,3 +11,8 @@
 - **<h4> ```export db_uri=postgresql+asyncpg://user:pass@host:5432/db``` </h4>**
 - **<h4> ```cd src``` </h4>**
 - **<h4> ```uvicorn app.main.main:app``` </h4>**
+
+**<h2> Testing: </h2>**
+- **<h4> Create .env file in the root dir by example (.env.example) </h3>**
+- **<h4> ```cd docker``` </h4>**
+- **<h3> ```docker compose -f testing.yml up```</h3>**

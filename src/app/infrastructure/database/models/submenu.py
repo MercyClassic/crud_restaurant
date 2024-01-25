@@ -1,4 +1,4 @@
-from typing import List  # , TYPE_CHECKING
+from typing import List
 from uuid import UUID, uuid4
 
 from sqlalchemy import ForeignKey, select
@@ -6,8 +6,6 @@ from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 from sqlalchemy.sql.functions import count
 
 from app.infrastructure.database.models import Base
-
-# if TYPE_CHECKING:
 from app.infrastructure.database.models.dish import Dish
 
 
@@ -17,7 +15,12 @@ class Submenu(Base):
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     title: Mapped[str]
     description: Mapped[str]
-    menu_id: Mapped[int] = mapped_column(ForeignKey('menu.id'))
+    menu_id: Mapped[int] = mapped_column(
+        ForeignKey(
+            'menu.id',
+            ondelete='CASCADE',
+        ),
+    )
 
     dishes: Mapped[List['Dish']] = relationship(backref='submenu')
 

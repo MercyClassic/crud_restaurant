@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List
+from typing import List
 from uuid import UUID, uuid4
 
 from sqlalchemy import select
@@ -7,8 +7,6 @@ from sqlalchemy.sql.functions import count
 
 from app.infrastructure.database.models import Base
 from app.infrastructure.database.models.dish import Dish
-
-# if TYPE_CHECKING:
 from app.infrastructure.database.models.submenu import Submenu
 
 
