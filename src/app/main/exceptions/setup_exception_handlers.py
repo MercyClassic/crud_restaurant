@@ -2,6 +2,7 @@ import logging
 from functools import partial
 from logging import config
 from pathlib import Path
+from typing import Callable
 
 from fastapi import FastAPI
 from starlette import status
@@ -19,7 +20,7 @@ config.dictConfig(get_logging_dict(root_dir))
 logger = logging.getLogger(__name__)
 
 
-def setup_exception_handlers(app: FastAPI):
+def setup_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(Exception, unexpected_error_log)
     app.add_exception_handler(
         DishNotFound,
@@ -35,7 +36,7 @@ def setup_exception_handlers(app: FastAPI):
     )
 
 
-def get_error_handler(error_info: str, status_code: int):
+def get_error_handler(error_info: str, status_code: int) -> Callable:
     return partial(
         error_handler,
         error_info=error_info,
@@ -56,7 +57,10 @@ def error_handler(
     )
 
 
-async def unexpected_error_log(request: Request, ex: Exception) -> JSONResponse:
+async def unexpected_error_log(
+    request: Request,
+    ex: Exception,
+) -> JSONResponse:
     logger.error(ex, exc_info=True)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

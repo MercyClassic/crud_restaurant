@@ -1,7 +1,7 @@
 import asyncio
 import os
 from functools import partial
-from typing import AsyncGenerator
+from typing import Any, AsyncGenerator, Generator
 
 import pytest
 from httpx import AsyncClient
@@ -13,12 +13,17 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.pool import NullPool
 
+from app.infrastructure.cache.interface import CacheInterface
 from app.infrastructure.database.models import Base
 from app.main.di.stub import get_session_stub
 from app.main.main import app
 
 test_engine = create_async_engine(os.environ['test_db_uri'], poolclass=NullPool)
 Base.metadata.bind = test_engine
+
+
+def reverse(path: str, **path_params) -> str:
+    return app.url_path_for(path, **path_params)
 
 
 def create_test_async_session_maker(test_engine: AsyncEngine) -> async_sessionmaker:
@@ -36,16 +41,35 @@ async def get_test_async_session(
         yield session
 
 
+class CacheMock:
+    def get(self, *args, **kwargs) -> Any:
+        pass
+
+    def set(self, *args, **kwargs) -> Any:
+        pass
+
+    def delete(self, *args, **kwargs) -> Any:
+        pass
+
+    def clear(self, *args, **kwargs) -> Any:
+        pass
+
+
+def get_cache_mock():
+    return CacheMock()
+
+
 test_async_session_maker = create_test_async_session_maker(test_engine)
 
 app.dependency_overrides[get_session_stub] = partial(
     get_test_async_session,
     test_async_session_maker,
 )
+app.dependency_overrides[CacheInterface] = get_cache_mock
 
 
 @pytest.fixture(autouse=True, scope='function')
-async def prepare_database():
+async def prepare_database() -> AsyncGenerator[None, None]:
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield
@@ -54,7 +78,7 @@ async def prepare_database():
 
 
 @pytest.fixture(scope='session')
-def event_loop(request):
+def event_loop(request) -> Generator[asyncio.AbstractEventLoop, None, None]:
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
     loop.close()
@@ -67,6 +91,6 @@ async def client() -> AsyncGenerator[AsyncClient, None]:
 
 
 @pytest.fixture()
-async def test_session():
+async def test_session() -> AsyncGenerator[AsyncSession, None]:
     async with test_async_session_maker() as session:
         yield session

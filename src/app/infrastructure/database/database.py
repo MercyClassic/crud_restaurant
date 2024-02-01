@@ -8,7 +8,7 @@ class Base(DeclarativeBase):
     pass
 
 
-def create_async_session_maker(database_url: str):
+def create_async_session_maker(database_url: str) -> async_sessionmaker:
     engine = create_async_engine(
         database_url,
     )

@@ -9,5 +9,5 @@ from app.main.di.stub import get_session_stub
 
 async def get_uow(
     session: Annotated[AsyncSession, Depends(get_session_stub)],
-):
+) -> UoW:
     return UoW(session)

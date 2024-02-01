@@ -5,10 +5,11 @@ from sqlalchemy import select
 from sqlalchemy.sql.functions import count
 
 from app.infrastructure.database.models import Submenu
+from tests.conftest import reverse
 from tests.conftest import test_async_session_maker as async_session_maker
 
 
-async def get_submenu_count():
+async def get_submenu_count() -> Submenu:
     async with async_session_maker() as session:
         result = await session.execute(
             select(count(Submenu.id)),
@@ -18,7 +19,7 @@ async def get_submenu_count():
 
 async def get_submenu_from_db(
     submenu_id: UUID,
-):
+) -> dict:
     async with async_session_maker() as session:
         result = await session.execute(
             select(Submenu).where(Submenu.id == submenu_id),
@@ -36,10 +37,9 @@ async def get_submenu_from_db(
 async def test_get_empty_submenu_list(
     client: AsyncClient,
     menu: UUID,
-):
-    response = await client.get(
-        f'/api/v1/menus/{menu}/submenus',
-    )
+) -> None:
+    url = reverse('get_submenus', menu_id=menu)
+    response = await client.get(url)
     assert response.status_code == 200
     assert response.json() == []
 
@@ -48,11 +48,10 @@ async def test_get_submenu_list(
     client: AsyncClient,
     submenu: tuple[UUID, UUID],
     dish: UUID,
-):
+) -> None:
     menu_id, submenu_id = submenu
-    response = await client.get(
-        f'/api/v1/menus/{menu_id}/submenus',
-    )
+    url = reverse('get_submenus', menu_id=menu_id)
+    response = await client.get(url)
     response_data = response.json()
     assert response.status_code == 200
     assert response_data == [
@@ -70,11 +69,14 @@ async def test_get_submenu_detail(
     client: AsyncClient,
     submenu: tuple[UUID, UUID],
     dish: UUID,
-):
+) -> None:
     menu_id, submenu_id = submenu
-    response = await client.get(
-        f'/api/v1/menus/{menu_id}/submenus/{submenu_id}',
-    )
+    path_params = {
+        'menu_id': menu_id,
+        'submenu_id': submenu_id,
+    }
+    url = reverse('get_submenu', **path_params)
+    response = await client.get(url)
     response_data = response.json()
     assert response.status_code == 200
     assert response_data == {
@@ -89,9 +91,10 @@ async def test_get_submenu_detail(
 async def test_create_submenu(
     client: AsyncClient,
     menu: UUID,
-):
+) -> None:
+    url = reverse('create_submenu', menu_id=menu)
     response = await client.post(
-        f'/api/v1/menus/{menu}/submenus',
+        url,
         json={
             'title': 'Submenu 1',
             'description': 'desc 1',
@@ -113,10 +116,15 @@ async def test_create_submenu(
 async def test_update_submenu(
     client: AsyncClient,
     submenu: tuple[UUID, UUID],
-):
+) -> None:
     menu_id, submenu_id = submenu
+    path_params = {
+        'menu_id': menu_id,
+        'submenu_id': submenu_id,
+    }
+    url = reverse('patch_submenu', **path_params)
     response = await client.patch(
-        f'/api/v1/menus/{menu_id}/submenus/{submenu_id}',
+        url,
         json={
             'title': 'Edited Submenu 1',
             'description': 'Edited Desc 1',
@@ -138,10 +146,13 @@ async def test_delete_submenu(
     client: AsyncClient,
     submenu: tuple[UUID, UUID],
     dish: UUID,
-):
+) -> None:
     menu_id, submenu_id = submenu
-    response = await client.delete(
-        f'/api/v1/menus/{menu_id}/submenus/{submenu_id}',
-    )
+    path_params = {
+        'menu_id': menu_id,
+        'submenu_id': submenu_id,
+    }
+    url = reverse('delete_submenu', **path_params)
+    response = await client.delete(url)
     assert response.status_code == 200
     assert await get_submenu_count() == 0

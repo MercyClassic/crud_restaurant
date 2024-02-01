@@ -1,4 +1,4 @@
-from uuid import UUID
+from typing import AsyncGenerator
 
 import pytest
 from sqlalchemy import delete, insert
@@ -10,10 +10,8 @@ from app.infrastructure.database.models import Dish, Menu, Submenu
 @pytest.fixture
 async def menu(
     test_session: AsyncSession,
-) -> UUID:
-    """
-    MENU FOR SUBMENU/DISH TESTS
-    """
+) -> AsyncGenerator[str, None]:
+    """MENU FOR SUBMENU/DISH TESTS"""
     menu = await test_session.execute(
         insert(Menu)
         .values(
@@ -35,12 +33,10 @@ async def menu(
 
 @pytest.fixture
 async def submenu(
-    menu: UUID,
+    menu: str,
     test_session: AsyncSession,
-) -> tuple[UUID, UUID]:
-    """
-    SUBMENU FOR DISH TESTS, RETURNING menu_uuid and submenu_uuid
-    """
+) -> AsyncGenerator[tuple[str, str], None]:
+    """SUBMENU FOR DISH TESTS, RETURNING menu_uuid and submenu_uuid"""
     submenu = await test_session.execute(
         insert(Submenu)
         .values(
@@ -63,12 +59,10 @@ async def submenu(
 
 @pytest.fixture
 async def dish(
-    submenu: tuple[UUID, UUID],
+    submenu: tuple[str, str],
     test_session: AsyncSession,
-) -> UUID:
-    """
-    DISH FOR DISH TESTS
-    """
+) -> AsyncGenerator[str, None]:
+    """DISH FOR DISH TESTS"""
     dish = await test_session.execute(
         insert(Dish)
         .values(

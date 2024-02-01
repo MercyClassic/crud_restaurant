@@ -27,7 +27,7 @@ async def test_count_scenario(
     menu: UUID,
     submenu: tuple[UUID, UUID],
     dish: UUID,
-):
+) -> None:
     menu_id, submenu_id = submenu
 
     await create_second_dish(submenu_id)

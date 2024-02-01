@@ -2,7 +2,7 @@ from decimal import Decimal
 from uuid import UUID
 
 from fastapi import Body
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 
 
 class Dish(BaseModel):
@@ -12,6 +12,11 @@ class Dish(BaseModel):
     description: str
     price: Decimal
     submenu_id: UUID
+
+    @field_validator('price')
+    @classmethod
+    def pre_parse_price(cls, value: Decimal) -> Decimal:
+        return Decimal(round(value, 2))
 
 
 class DishCreate(BaseModel):

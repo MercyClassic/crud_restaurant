@@ -8,7 +8,7 @@ from app.infrastructure.database.interfaces.uow.uow import UoWInterface
 
 def get_submenu_usecase(
     uow: Annotated[UoWInterface, Depends()],
-):
+) -> SubmenuUsecase:
     return SubmenuUsecase(
         uow=uow,
     )

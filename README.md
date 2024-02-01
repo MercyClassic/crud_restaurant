@@ -16,3 +16,5 @@
 - **<h4> Create .env file in the root dir by example (.env.example) </h3>**
 - **<h4> ```cd docker``` </h4>**
 - **<h3> ```docker compose -f testing.yml up```</h3>**
+
+**<h3> Django ```reverse()``` analogue located in tests/conftest.py </h3>**

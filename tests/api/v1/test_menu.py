@@ -6,10 +6,11 @@ from sqlalchemy.orm import undefer
 from sqlalchemy.sql.functions import count
 
 from app.infrastructure.database.models import Menu
+from tests.conftest import reverse
 from tests.conftest import test_async_session_maker as async_session_maker
 
 
-async def get_menu_count():
+async def get_menu_count() -> Menu:
     async with async_session_maker() as session:
         result = await session.execute(
             select(count(Menu.id)),
@@ -19,7 +20,7 @@ async def get_menu_count():
 
 async def get_menu_from_db(
     menu_id: UUID,
-):
+) -> dict:
     async with async_session_maker() as session:
         result = await session.execute(
             select(Menu)
@@ -42,10 +43,9 @@ async def get_menu_from_db(
 
 async def test_get_empty_menu_list(
     client: AsyncClient,
-):
-    response = await client.get(
-        '/api/v1/menus',
-    )
+) -> None:
+    url = reverse('get_menus')
+    response = await client.get(url)
     assert response.status_code == 200
     assert response.json() == []
 
@@ -54,11 +54,10 @@ async def test_get_menu_list(
     client: AsyncClient,
     submenu: tuple[UUID, UUID],
     dish: UUID,
-):
+) -> None:
     menu_id, submenu_id = submenu
-    response = await client.get(
-        '/api/v1/menus',
-    )
+    url = reverse('get_menus')
+    response = await client.get(url)
     response_data = response.json()
     assert response.status_code == 200
     assert response_data == [
@@ -80,11 +79,10 @@ async def test_get_menu_detail(
     client: AsyncClient,
     submenu: tuple[UUID, UUID],
     dish: UUID,
-):
+) -> None:
     menu_id, submenu_id = submenu
-    response = await client.get(
-        f'/api/v1/menus/{menu_id}',
-    )
+    url = reverse('get_menu', menu_id=menu_id)
+    response = await client.get(url)
     response_data = response.json()
     assert response.status_code == 200
     assert response_data == {
@@ -98,9 +96,10 @@ async def test_get_menu_detail(
 
 async def test_create_menu(
     client: AsyncClient,
-):
+) -> None:
+    url = reverse('get_menus')
     response = await client.post(
-        '/api/v1/menus',
+        url,
         json={
             'title': 'Menu 1',
             'description': 'desc 1',
@@ -123,9 +122,10 @@ async def test_create_menu(
 async def test_update_menu(
     client: AsyncClient,
     menu: UUID,
-):
+) -> None:
+    url = reverse('patch_menu', menu_id=menu)
     response = await client.patch(
-        f'/api/v1/menus/{menu}',
+        url,
         json={
             'title': 'Edited Menu 1',
             'description': 'Edited Desc 1',
@@ -147,9 +147,8 @@ async def test_update_menu(
 async def test_delete_menu(
     client: AsyncClient,
     menu: UUID,
-):
-    response = await client.delete(
-        f'/api/v1/menus/{menu}',
-    )
+) -> None:
+    url = reverse('patch_menu', menu_id=menu)
+    response = await client.delete(url)
     assert response.status_code == 200
     assert await get_menu_count() == 0
