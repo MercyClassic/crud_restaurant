@@ -60,7 +60,7 @@ async def create_menu(
     cache: Annotated[CacheInterface, Depends()],
 ) -> Any:
     data = await menu_usecase.create_menu(menu_data.model_dump())
-    cache.clear()
+    cache.delete('menus')
     return data
 
 
@@ -135,4 +135,4 @@ async def delete_menu(
     cache: Annotated[CacheInterface, Depends()],
 ) -> None:
     await menu_usecase.delete_menu(menu_id)
-    cache.clear()
+    cache.delete_menu(menu_id)

@@ -49,13 +49,18 @@ async def get_dishes(
     status_code=201,
 )
 async def create_dish(
+    menu_id: UUID,
     submenu_id: UUID,
     dish_data: DishCreate,
     dish_usecase: Annotated[DishUsecaseInterface, Depends()],
     cache: Annotated[CacheInterface, Depends()],
 ) -> Any:
     data = await dish_usecase.create_dish(submenu_id, dish_data.model_dump())
-    cache.clear()
+    cache.delete('dishes')
+    cache.delete('submenus')
+    cache.delete(f'submenu-{submenu_id}')
+    cache.delete('menus')
+    cache.delete(f'menu-{menu_id}')
     return data
 
 
@@ -65,15 +70,21 @@ async def create_dish(
     status_code=200,
 )
 async def get_dish(
+    menu_id: UUID,
+    submenu_id: UUID,
     dish_id: UUID,
     dish_usecase: Annotated[DishUsecaseInterface, Depends()],
     cache: Annotated[CacheInterface, Depends()],
 ) -> Any:
-    data = cache.get(f'dish-{dish_id}')
+    data = cache.get(f'dish-{dish_id}_submenu-{submenu_id}_menu-{menu_id}')
     if not data:
         data = await dish_usecase.get_dish(dish_id)
         data = jsonable_encoder(data)
-        cache.set(f'dish-{dish_id}', json.dumps(data), ex=30)
+        cache.set(
+            f'dish-{dish_id}_submenu-{submenu_id}_menu-{menu_id}',
+            json.dumps(data),
+            ex=30,
+        )
     else:
         data = json.loads(data)
     return data
@@ -85,6 +96,8 @@ async def get_dish(
     status_code=200,
 )
 async def put_dish(
+    menu_id: UUID,
+    submenu_id: UUID,
     dish_id: UUID,
     update_data: DishUpdatePut,
     dish_usecase: Annotated[DishUsecaseInterface, Depends()],
@@ -92,7 +105,7 @@ async def put_dish(
 ) -> Any:
     data = await dish_usecase.update_dish(dish_id, update_data.model_dump(exclude_none=True))
     cache.delete('dishes')
-    cache.delete(f'dish-{dish_id}')
+    cache.delete(f'dish-{dish_id}_submenu-{submenu_id}_menu-{menu_id}')
     return data
 
 
@@ -102,6 +115,8 @@ async def put_dish(
     status_code=200,
 )
 async def patch_dish(
+    menu_id: UUID,
+    submenu_id: UUID,
     dish_id: UUID,
     update_data: DishUpdatePatch,
     dish_usecase: Annotated[DishUsecaseInterface, Depends()],
@@ -109,7 +124,7 @@ async def patch_dish(
 ) -> Any:
     data = await dish_usecase.update_dish(dish_id, update_data.model_dump(exclude_none=True))
     cache.delete('dishes')
-    cache.delete(f'dish-{dish_id}')
+    cache.delete(f'dish-{dish_id}_submenu-{submenu_id}_menu-{menu_id}')
     return data
 
 
@@ -119,9 +134,11 @@ async def patch_dish(
     status_code=200,
 )
 async def delete_dish(
+    menu_id: UUID,
+    submenu_id: UUID,
     dish_id: UUID,
     dish_usecase: Annotated[DishUsecaseInterface, Depends()],
     cache: Annotated[CacheInterface, Depends()],
 ) -> None:
     await dish_usecase.delete_dish(dish_id)
-    cache.clear()
+    cache.delete_dish(dish_id, submenu_id, menu_id)

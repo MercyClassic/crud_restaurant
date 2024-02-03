@@ -61,7 +61,9 @@ async def create_submenu(
     cache: Annotated[CacheInterface, Depends()],
 ) -> Any:
     data = await submenu_usecase.create_submenu(menu_id, submenu_data.model_dump())
-    cache.clear()
+    cache.delete('submenus')
+    cache.delete('menus')
+    cache.delete(f'menu-{menu_id}')
     return data
 
 
@@ -71,15 +73,20 @@ async def create_submenu(
     status_code=200,
 )
 async def get_submenu(
+    menu_id: UUID,
     submenu_id: UUID,
     submenu_usecase: Annotated[SubmenuUsecaseInterface, Depends()],
     cache: Annotated[CacheInterface, Depends()],
 ) -> Any:
-    data = cache.get(f'submenu-{submenu_id}')
+    data = cache.get(f'submenu-{submenu_id}_menu-{menu_id}')
     if not data:
         data = await submenu_usecase.get_submenu(submenu_id)
         data = jsonable_encoder(data)
-        cache.set(f'submenu-{submenu_id}', json.dumps(data), ex=30)
+        cache.set(
+            f'submenu-{submenu_id}_menu-{menu_id}',
+            json.dumps(data),
+            ex=30,
+        )
     else:
         data = json.loads(data)
     return data
@@ -91,6 +98,7 @@ async def get_submenu(
     status_code=200,
 )
 async def put_submenu(
+    menu_id: UUID,
     submenu_id: UUID,
     update_data: SubmenuUpdatePut,
     submenu_usecase: Annotated[SubmenuUsecaseInterface, Depends()],
@@ -101,7 +109,7 @@ async def put_submenu(
         update_data.model_dump(exclude_none=True),
     )
     cache.delete('submenus')
-    cache.delete(f'submenu-{submenu_id}')
+    cache.delete(f'submenu-{submenu_id}_menu-{menu_id}')
     return data
 
 
@@ -111,6 +119,7 @@ async def put_submenu(
     status_code=200,
 )
 async def patch_submenu(
+    menu_id: UUID,
     submenu_id: UUID,
     update_data: SubmenuUpdatePatch,
     submenu_usecase: Annotated[SubmenuUsecaseInterface, Depends()],
@@ -121,7 +130,7 @@ async def patch_submenu(
         update_data.model_dump(exclude_none=True),
     )
     cache.delete('submenus')
-    cache.delete(f'submenu-{submenu_id}')
+    cache.delete(f'submenu-{submenu_id}_menu-{menu_id}')
     return data
 
 
@@ -131,9 +140,10 @@ async def patch_submenu(
     status_code=200,
 )
 async def delete_submenu(
+    menu_id: UUID,
     submenu_id: UUID,
     submenu_usecase: Annotated[SubmenuUsecaseInterface, Depends()],
     cache: Annotated[CacheInterface, Depends()],
 ) -> None:
     await submenu_usecase.delete_submenu(submenu_id)
-    cache.clear()
+    cache.delete_submenu(submenu_id, menu_id)

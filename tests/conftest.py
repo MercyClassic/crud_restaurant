@@ -51,7 +51,13 @@ class CacheMock:
     def delete(self, *args, **kwargs) -> Any:
         pass
 
-    def clear(self, *args, **kwargs) -> Any:
+    def delete_dish(self, *args, **kwargs) -> Any:
+        pass
+
+    def delete_submenu(self, *args, **kwargs) -> Any:
+        pass
+
+    def delete_menu(self, *args, **kwargs) -> Any:
         pass
 
 
