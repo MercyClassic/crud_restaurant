@@ -1,35 +1,83 @@
+import json
+from typing import Sequence
 from uuid import UUID
 
+from fastapi.encoders import jsonable_encoder  # DASDASDSA
+
 from app.domain.exceptions.menu import MenuNotFound
+from app.infrastructure.cache.interface import CacheServiceInterface
 from app.infrastructure.database.interfaces.uow.uow import UoWInterface
+from app.infrastructure.database.models import Menu
 
 
 class MenuUsecase:
-    def __init__(self, uow: UoWInterface):
-        self.uow = uow
+    def __init__(
+        self,
+        uow: UoWInterface,
+        cache: CacheServiceInterface,
+    ):
+        self._uow = uow
+        self._cache = cache
 
-    async def get_menus(self):
-        return await self.uow.menu_repo.get_menus()
+    async def get_menus(self) -> Sequence[Menu]:
+        menus = self._cache.get('menus')
+        if not menus:
+            menus = await self._uow.menu_repo.get_menus()
+            menus = jsonable_encoder(menus)
+            self._cache.set('menus', json.dumps(menus), ex=30)
+        else:
+            menus = json.loads(menus)
+        return menus
 
-    async def get_menu(self, menu_id: UUID):
-        menu = await self.uow.menu_repo.get_menu(menu_id)
+    async def get_menu(self, menu_id: UUID) -> Menu:
+        menu = self._cache.get(f'menu-{menu_id}')
         if not menu:
-            raise MenuNotFound
+            menu = await self._uow.menu_repo.get_menu(menu_id)
+            if not menu:
+                raise MenuNotFound
+            menu = jsonable_encoder(menu)
+            self._cache.set(f'menu-{menu_id}', json.dumps(menu), ex=30)
+        else:
+            menu = json.loads(menu)
         return menu
 
-    async def create_menu(self, menu_data: dict):
-        menu = await self.uow.menu_repo.save_menu(menu_data)
-        await self.uow.commit()
-        menu = await self.uow.menu_repo.get_menu(menu.id)
+    async def create_menu(
+        self,
+        title: str,
+        description: str,
+    ) -> Menu:
+        menu = await self._uow.menu_repo.save_menu(
+            title=title,
+            description=description,
+        )
+        await self._uow.commit()
+        menu = await self._uow.menu_repo.get_menu(menu.id)
+        self._cache.delete('menus')
         return menu
 
-    async def update_menu(self, menu_id: UUID, menu_data: dict):
-        menu = await self.uow.menu_repo.update_menu(menu_id, menu_data)
-        await self.uow.commit()
-        menu = await self.uow.menu_repo.get_menu(menu.id)
+    async def update_menu(
+        self,
+        menu_id: UUID,
+        title: str | None,
+        description: str | None,
+    ) -> Menu:
+        menu = await self._uow.menu_repo.update_menu(
+            menu_id=menu_id,
+            title=title,
+            description=description,
+        )
+        await self._uow.commit()
+        menu = await self._uow.menu_repo.get_menu(menu.id)
+        self._cache.delete('menus')
+        self._cache.delete(f'menu-{menu_id}')
         return menu
 
-    async def delete_menu(self, menu_id: UUID):
-        await self.uow.submenu_repo.delete_submenus_by_menu_id(menu_id)
-        await self.uow.menu_repo.delete_menu(menu_id)
-        await self.uow.commit()
+    async def delete_menu(self, menu_id: UUID) -> None:
+        await self._uow.menu_repo.delete_menu(menu_id)
+        await self._uow.commit()
+        self._cache.delete('menus')
+        self._cache.delete(f'menu-{menu_id}')
+        self._cache.delete('submenus')
+        self._cache.delete('dishes')
+        self._cache.delete_by_pattern(f'submenu-*_menu-{menu_id}')
+        self._cache.delete_by_pattern(f'dish-*_submenu-*_menu-{menu_id}')

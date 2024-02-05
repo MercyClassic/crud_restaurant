@@ -9,7 +9,7 @@ from tests.conftest import reverse
 from tests.conftest import test_async_session_maker as async_session_maker
 
 
-async def get_submenu_count() -> Submenu:
+async def get_submenu_count() -> int:
     async with async_session_maker() as session:
         result = await session.execute(
             select(count(Submenu.id)),
@@ -19,7 +19,7 @@ async def get_submenu_count() -> Submenu:
 
 async def get_submenu_from_db(
     submenu_id: UUID,
-) -> dict:
+) -> dict[str, str]:
     async with async_session_maker() as session:
         result = await session.execute(
             select(Submenu).where(Submenu.id == submenu_id),

@@ -13,7 +13,9 @@ from app.infrastructure.database.models.menu import Menu
 
 class MenuRepository(SQLAlchemyBaseGateway):
     async def get_menus(self) -> Sequence[Menu]:
-        query = select(Menu).options(joinedload(Menu.submenus).load_only(Submenu.dish_count))
+        query = select(Menu).options(
+            joinedload(Menu.submenus).load_only(Submenu.dish_count),
+        )
         result = await self._session.execute(query)
         return result.unique().scalars().all()
 
@@ -29,13 +31,35 @@ class MenuRepository(SQLAlchemyBaseGateway):
         result = await self._session.execute(query)
         return result.scalar()
 
-    async def save_menu(self, data: dict) -> Menu:
-        stmt = insert(Menu).values(**data).returning(Menu)
+    async def save_menu(
+        self,
+        title: str,
+        description: str,
+    ) -> Menu:
+        stmt = (
+            insert(Menu)
+            .values(
+                title=title,
+                description=description,
+            )
+            .returning(Menu)
+        )
         result = await self._session.execute(stmt)
         return result.scalar()
 
-    async def update_menu(self, menu_id: UUID, update_data: dict) -> Menu:
-        stmt = update(Menu).where(Menu.id == menu_id).values(**update_data).returning(Menu)
+    async def update_menu(
+        self,
+        menu_id: UUID,
+        title: str | None = None,
+        description: str | None = None,
+    ) -> Menu:
+        values = {}
+        if title:
+            values.update({'title': title})
+        if description:
+            values.update({'description': description})
+
+        stmt = update(Menu).where(Menu.id == menu_id).values(**values).returning(Menu)
         result = await self._session.execute(stmt)
         return result.scalar()
 

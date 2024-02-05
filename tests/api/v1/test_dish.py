@@ -9,7 +9,7 @@ from tests.conftest import reverse
 from tests.conftest import test_async_session_maker as async_session_maker
 
 
-async def get_dish_count() -> Dish:
+async def get_dish_count() -> int:
     async with async_session_maker() as session:
         result = await session.execute(
             select(count(Dish.id)),
@@ -19,7 +19,7 @@ async def get_dish_count() -> Dish:
 
 async def get_dish_from_db(
     dish_id: UUID,
-) -> dict:
+) -> dict[str, str]:
     async with async_session_maker() as session:
         result = await session.execute(
             select(Dish).where(Dish.id == dish_id),

@@ -10,7 +10,7 @@ from tests.conftest import reverse
 from tests.conftest import test_async_session_maker as async_session_maker
 
 
-async def get_menu_count() -> Menu:
+async def get_menu_count() -> int:
     async with async_session_maker() as session:
         result = await session.execute(
             select(count(Menu.id)),
@@ -20,7 +20,7 @@ async def get_menu_count() -> Menu:
 
 async def get_menu_from_db(
     menu_id: UUID,
-) -> dict:
+) -> dict[str, str]:
     async with async_session_maker() as session:
         result = await session.execute(
             select(Menu)

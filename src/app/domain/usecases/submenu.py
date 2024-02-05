@@ -1,36 +1,100 @@
+import json
+from typing import Sequence
 from uuid import UUID
 
+from fastapi.encoders import jsonable_encoder
+
 from app.domain.exceptions.submenu import SubmenuNotFound
+from app.infrastructure.cache.interface import CacheServiceInterface
 from app.infrastructure.database.interfaces.uow.uow import UoWInterface
+from app.infrastructure.database.models import Submenu
 
 
 class SubmenuUsecase:
-    def __init__(self, uow: UoWInterface):
-        self.uow = uow
+    def __init__(
+        self,
+        uow: UoWInterface,
+        cache: CacheServiceInterface,
+    ):
+        self._uow = uow
+        self._cache = cache
 
-    async def get_submenus(self):
-        return await self.uow.submenu_repo.get_submenus()
+    async def get_submenus(self) -> Sequence[Submenu]:
+        submenus = self._cache.get('submenus')
+        if not submenus:
+            submenus = await self._uow.submenu_repo.get_submenus()
+            submenus = jsonable_encoder(submenus)
+            self._cache.set('submenus', json.dumps(submenus), ex=30)
+        else:
+            submenus = json.loads(submenus)
+        return submenus
 
-    async def get_submenu(self, submenu_id: UUID):
-        submenu = await self.uow.submenu_repo.get_submenu(submenu_id)
+    async def get_submenu(
+        self,
+        submenu_id: UUID,
+        menu_id: UUID,
+    ) -> Submenu:
+        submenu = self._cache.get(f'submenu-{submenu_id}_menu-{menu_id}')
         if not submenu:
-            raise SubmenuNotFound
+            submenu = await self._uow.submenu_repo.get_submenu(submenu_id)
+            if not submenu:
+                raise SubmenuNotFound
+            submenu = jsonable_encoder(submenu)
+            self._cache.set(
+                f'submenu-{submenu_id}_menu-{menu_id}',
+                json.dumps(submenu),
+                ex=30,
+            )
+        else:
+            submenu = json.loads(submenu)
         return submenu
 
-    async def create_submenu(self, menu_id: UUID, submenu_data: dict):
-        submenu_data['menu_id'] = menu_id
-        submenu = await self.uow.submenu_repo.save_submenu(submenu_data)
-        await self.uow.commit()
-        submenu = await self.uow.submenu_repo.get_submenu(submenu.id)
+    async def create_submenu(
+        self,
+        menu_id: UUID,
+        title: str,
+        description: str,
+    ) -> Submenu:
+        submenu = await self._uow.submenu_repo.save_submenu(
+            menu_id=menu_id,
+            title=title,
+            description=description,
+        )
+        await self._uow.commit()
+        submenu = await self._uow.submenu_repo.get_submenu(submenu.id)
+        self._cache.delete('submenus')
+        self._cache.delete('menus')
+        self._cache.delete(f'menu-{menu_id}')
         return submenu
 
-    async def update_submenu(self, submenu_id: UUID, submenu_data: dict):
-        submenu = await self.uow.submenu_repo.update_submenu(submenu_id, submenu_data)
-        await self.uow.commit()
-        submenu = await self.uow.submenu_repo.get_submenu(submenu.id)
+    async def update_submenu(
+        self,
+        submenu_id: UUID,
+        menu_id: UUID,
+        title: str | None,
+        description: str | None,
+    ) -> Submenu:
+        submenu = await self._uow.submenu_repo.update_submenu(
+            submenu_id=submenu_id,
+            title=title,
+            description=description,
+        )
+        await self._uow.commit()
+        submenu = await self._uow.submenu_repo.get_submenu(submenu.id)
+        self._cache.delete('submenus')
+        self._cache.delete(f'submenu-{submenu_id}_menu-{menu_id}')
         return submenu
 
-    async def delete_submenu(self, submenu_id: UUID):
-        await self.uow.dish_repo.delete_dishes_by_submenu_id(submenu_id)
-        await self.uow.submenu_repo.delete_submenu(submenu_id)
-        await self.uow.commit()
+    async def delete_submenu(
+        self,
+        submenu_id: UUID,
+        menu_id: UUID,
+    ) -> None:
+        await self._uow.submenu_repo.delete_submenu(submenu_id)
+        await self._uow.commit()
+        self._cache.delete('submenus')
+        self._cache.delete(f'submenu-{submenu_id}_menu-{menu_id}')
+        self._cache.delete('menus')
+        self._cache.delete(f'menu-{menu_id}')
+        self._cache.delete('dishes')
+        self._cache.delete_by_pattern(f'dish-*_submenu-{submenu_id}_menu-{menu_id}')

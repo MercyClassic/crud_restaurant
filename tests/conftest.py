@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.pool import NullPool
 
-from app.infrastructure.cache.interface import CacheInterface
+from app.infrastructure.cache.interface import CacheServiceInterface
 from app.infrastructure.database.models import Base
 from app.main.di.stub import get_session_stub
 from app.main.main import app
@@ -51,13 +51,7 @@ class CacheMock:
     def delete(self, *args, **kwargs) -> Any:
         pass
 
-    def delete_dish(self, *args, **kwargs) -> Any:
-        pass
-
-    def delete_submenu(self, *args, **kwargs) -> Any:
-        pass
-
-    def delete_menu(self, *args, **kwargs) -> Any:
+    def delete_by_pattern(self, *args, **kwargs) -> Any:
         pass
 
 
@@ -71,7 +65,7 @@ app.dependency_overrides[get_session_stub] = partial(
     get_test_async_session,
     test_async_session_maker,
 )
-app.dependency_overrides[CacheInterface] = get_cache_mock
+app.dependency_overrides[CacheServiceInterface] = get_cache_mock
 
 
 @pytest.fixture(autouse=True, scope='function')

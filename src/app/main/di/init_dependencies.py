@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from app.domain.interfaces.usecases.dish import DishUsecaseInterface
 from app.domain.interfaces.usecases.menu import MenuUsecaseInterface
 from app.domain.interfaces.usecases.submenu import SubmenuUsecaseInterface
-from app.infrastructure.cache.interface import CacheInterface
+from app.infrastructure.cache.interface import CacheServiceInterface
 from app.infrastructure.database.database import (
     create_async_session_maker,
     get_async_session,
@@ -39,6 +39,6 @@ def init_dependencies(app: FastAPI) -> None:
     app.dependency_overrides[DishUsecaseInterface] = get_dish_usecase
     app.dependency_overrides[MenuUsecaseInterface] = get_menu_usecase
     app.dependency_overrides[SubmenuUsecaseInterface] = get_submenu_usecase
-    app.dependency_overrides[CacheInterface] = singleton(
+    app.dependency_overrides[CacheServiceInterface] = singleton(
         get_redis_cache_service(os.environ['REDIS_HOST']),
     )

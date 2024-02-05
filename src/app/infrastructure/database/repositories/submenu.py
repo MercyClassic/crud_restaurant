@@ -29,22 +29,40 @@ class SubmenuRepository(SQLAlchemyBaseGateway):
         result = await self._session.execute(query)
         return result.scalar()
 
-    async def save_submenu(self, data: dict) -> Submenu:
-        stmt = insert(Submenu).values(**data).returning(Submenu)
+    async def save_submenu(
+        self,
+        menu_id: UUID,
+        title: str,
+        description: str,
+    ) -> Submenu:
+        stmt = (
+            insert(Submenu)
+            .values(
+                menu_id=menu_id,
+                title=title,
+                description=description,
+            )
+            .returning(Submenu)
+        )
         result = await self._session.execute(stmt)
         return result.scalar()
 
-    async def update_submenu(self, submenu_id: UUID, update_data: dict) -> Submenu:
-        stmt = (
-            update(Submenu).where(Submenu.id == submenu_id).values(**update_data).returning(Submenu)
-        )
+    async def update_submenu(
+        self,
+        submenu_id: UUID,
+        title: str | None = None,
+        description: str | None = None,
+    ) -> Submenu:
+        values = {}
+        if title:
+            values.update({'title': title})
+        if description:
+            values.update({'description': description})
+
+        stmt = update(Submenu).where(Submenu.id == submenu_id).values(**values).returning(Submenu)
         result = await self._session.execute(stmt)
         return result.scalar()
 
     async def delete_submenu(self, submenu_id: UUID) -> None:
         stmt = delete(Submenu).where(Submenu.id == submenu_id)
-        await self._session.execute(stmt)
-
-    async def delete_submenus_by_menu_id(self, menu_id: UUID) -> None:
-        stmt = delete(Submenu).where(Submenu.menu_id == menu_id)
         await self._session.execute(stmt)

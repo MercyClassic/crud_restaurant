@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import Sequence
 from uuid import UUID
 
@@ -20,20 +21,45 @@ class DishRepository(SQLAlchemyBaseGateway):
         result = await self._session.execute(query)
         return result.scalar()
 
-    async def save_dish(self, data: dict) -> Dish:
-        stmt = insert(Dish).values(**data).returning(Dish)
+    async def save_dish(
+        self,
+        submenu_id: UUID,
+        title: str,
+        description: str,
+        price: Decimal,
+    ) -> Dish:
+        stmt = (
+            insert(Dish)
+            .values(
+                submenu_id=submenu_id,
+                title=title,
+                description=description,
+                price=price,
+            )
+            .returning(Dish)
+        )
         result = await self._session.execute(stmt)
         return result.scalar()
 
-    async def update_dish(self, dish_id: UUID, update_data: dict) -> Dish:
-        stmt = update(Dish).where(Dish.id == dish_id).values(**update_data).returning(Dish)
+    async def update_dish(
+        self,
+        dish_id: UUID,
+        title: str | None = None,
+        description: str | None = None,
+        price: Decimal | None = None,
+    ) -> Dish:
+        values = {}
+        if title:
+            values.update({'title': title})
+        if description:
+            values.update({'description': description})
+        if price:
+            values.update({'price': str(price)})
+
+        stmt = update(Dish).where(Dish.id == dish_id).values(**values).returning(Dish)
         result = await self._session.execute(stmt)
         return result.scalar()
 
     async def delete_dish(self, dish_id: UUID) -> None:
         stmt = delete(Dish).where(Dish.id == dish_id)
-        await self._session.execute(stmt)
-
-    async def delete_dishes_by_submenu_id(self, submenu_id: UUID) -> None:
-        stmt = delete(Dish).where(Dish.submenu_id == submenu_id)
         await self._session.execute(stmt)

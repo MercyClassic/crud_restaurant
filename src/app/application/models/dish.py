@@ -29,11 +29,9 @@ class DishUpdatePatch(BaseModel):
     title: str = Body(None)
     description: str = Body(None)
     price: Decimal = Body(None)
-    submenu_id: UUID = Body(None)
 
 
 class DishUpdatePut(BaseModel):
     title: str = Body(...)
     description: str = Body(...)
     price: Decimal = Body(...)
-    submenu_id: UUID = Body(...)
