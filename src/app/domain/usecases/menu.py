@@ -2,8 +2,7 @@ import json
 from typing import Sequence
 from uuid import UUID
 
-from fastapi.encoders import jsonable_encoder  # DASDASDSA
-
+from app.application.encoders.json import JSONEncoder
 from app.domain.exceptions.menu import MenuNotFound
 from app.infrastructure.cache.interface import CacheServiceInterface
 from app.infrastructure.database.interfaces.uow.uow import UoWInterface
@@ -23,7 +22,8 @@ class MenuUsecase:
         menus = self._cache.get('menus')
         if not menus:
             menus = await self._uow.menu_repo.get_menus()
-            menus = jsonable_encoder(menus)
+            encoder = JSONEncoder(menus)
+            menus = encoder.data
             self._cache.set('menus', json.dumps(menus), ex=30)
         else:
             menus = json.loads(menus)
@@ -35,7 +35,8 @@ class MenuUsecase:
             menu = await self._uow.menu_repo.get_menu(menu_id)
             if not menu:
                 raise MenuNotFound
-            menu = jsonable_encoder(menu)
+            encoder = JSONEncoder(menu)
+            menu = encoder.data
             self._cache.set(f'menu-{menu_id}', json.dumps(menu), ex=30)
         else:
             menu = json.loads(menu)

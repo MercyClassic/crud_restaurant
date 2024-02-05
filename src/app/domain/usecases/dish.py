@@ -3,8 +3,7 @@ from decimal import Decimal
 from typing import Sequence
 from uuid import UUID
 
-from fastapi.encoders import jsonable_encoder  # ADAKDPOSA
-
+from app.application.encoders.json import JSONEncoder
 from app.domain.exceptions.dish import DishNotFound
 from app.infrastructure.cache.interface import CacheServiceInterface
 from app.infrastructure.database.interfaces.uow.uow import UoWInterface
@@ -24,7 +23,8 @@ class DishUsecase:
         dishes = self._cache.get('dishes')
         if not dishes:
             dishes = await self._uow.dish_repo.get_dishes()
-            dishes = jsonable_encoder(dishes)
+            encoder = JSONEncoder(dishes)
+            dishes = encoder.data
             self._cache.set('dishes', json.dumps(dishes), ex=30)
         else:
             dishes = json.loads(dishes)
@@ -41,7 +41,8 @@ class DishUsecase:
             dish = await self._uow.dish_repo.get_dish(dish_id)
             if not dish:
                 raise DishNotFound
-            dish = jsonable_encoder(dish)
+            encoder = JSONEncoder(dish)
+            dish = encoder.data
             self._cache.set(
                 f'dish-{dish_id}_submenu-{submenu_id}_menu-{menu_id}',
                 json.dumps(dish),

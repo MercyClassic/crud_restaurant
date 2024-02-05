@@ -2,8 +2,7 @@ import json
 from typing import Sequence
 from uuid import UUID
 
-from fastapi.encoders import jsonable_encoder
-
+from app.application.encoders.json import JSONEncoder
 from app.domain.exceptions.submenu import SubmenuNotFound
 from app.infrastructure.cache.interface import CacheServiceInterface
 from app.infrastructure.database.interfaces.uow.uow import UoWInterface
@@ -23,7 +22,8 @@ class SubmenuUsecase:
         submenus = self._cache.get('submenus')
         if not submenus:
             submenus = await self._uow.submenu_repo.get_submenus()
-            submenus = jsonable_encoder(submenus)
+            encoder = JSONEncoder(submenus)
+            submenus = encoder.data
             self._cache.set('submenus', json.dumps(submenus), ex=30)
         else:
             submenus = json.loads(submenus)
@@ -39,7 +39,8 @@ class SubmenuUsecase:
             submenu = await self._uow.submenu_repo.get_submenu(submenu_id)
             if not submenu:
                 raise SubmenuNotFound
-            submenu = jsonable_encoder(submenu)
+            encoder = JSONEncoder(submenu)
+            submenu = encoder.data
             self._cache.set(
                 f'submenu-{submenu_id}_menu-{menu_id}',
                 json.dumps(submenu),
