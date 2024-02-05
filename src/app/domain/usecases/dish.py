@@ -102,6 +102,14 @@ class DishUsecase:
     ) -> None:
         await self._uow.dish_repo.delete_dish(dish_id)
         await self._uow.commit()
+        self._invalidate_cache_after_delete_dish(dish_id, submenu_id, menu_id)
+
+    def _invalidate_cache_after_delete_dish(
+        self,
+        dish_id: UUID,
+        submenu_id: UUID,
+        menu_id: UUID,
+    ):
         self._cache.delete('dishes')
         self._cache.delete(f'dish-{dish_id}_submenu-{submenu_id}_menu-{menu_id}')
         self._cache.delete('submenus')

@@ -93,6 +93,13 @@ class SubmenuUsecase:
     ) -> None:
         await self._uow.submenu_repo.delete_submenu(submenu_id)
         await self._uow.commit()
+        self._invalidate_cache_after_delete_submenu(submenu_id, menu_id)
+
+    def _invalidate_cache_after_delete_submenu(
+        self,
+        submenu_id: UUID,
+        menu_id: UUID,
+    ):
         self._cache.delete('submenus')
         self._cache.delete(f'submenu-{submenu_id}_menu-{menu_id}')
         self._cache.delete('menus')

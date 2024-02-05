@@ -76,6 +76,9 @@ class MenuUsecase:
     async def delete_menu(self, menu_id: UUID) -> None:
         await self._uow.menu_repo.delete_menu(menu_id)
         await self._uow.commit()
+        self._invalidate_cache_after_delete_menu(menu_id)
+
+    def _invalidate_cache_after_delete_menu(self, menu_id: UUID):
         self._cache.delete('menus')
         self._cache.delete(f'menu-{menu_id}')
         self._cache.delete('submenus')
