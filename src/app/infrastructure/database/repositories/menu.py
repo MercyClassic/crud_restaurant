@@ -14,12 +14,21 @@ from app.infrastructure.database.models.menu import Menu
 class MenuRepository(SQLAlchemyBaseGateway):
     async def get_menus(self) -> Sequence[Menu]:
         query = select(Menu).options(
-            joinedload(Menu.submenus).load_only(Submenu.dish_count),
+            joinedload(Menu.submenus).load_only(Submenu.dishes_count),
         )
         result = await self._session.execute(query)
         return result.unique().scalars().all()
 
-    async def get_menu(self, menu_id: UUID) -> Menu:
+    async def get_menus_with_all_data(self) -> Sequence[Menu]:
+        query = select(Menu).options(
+            joinedload(Menu.submenus).options(
+                joinedload(Submenu.dishes),
+            ),
+        )
+        result = await self._session.execute(query)
+        return result.unique().scalars().all()
+
+    async def get_menu(self, menu_id: UUID) -> Menu | None:
         query = (
             select(Menu)
             .where(Menu.id == menu_id)
@@ -45,14 +54,14 @@ class MenuRepository(SQLAlchemyBaseGateway):
             .returning(Menu)
         )
         result = await self._session.execute(stmt)
-        return result.scalar()
+        return result.scalar_one()
 
     async def update_menu(
         self,
         menu_id: UUID,
         title: str | None = None,
         description: str | None = None,
-    ) -> Menu:
+    ) -> Menu | None:
         values = {}
         if title:
             values.update({'title': title})

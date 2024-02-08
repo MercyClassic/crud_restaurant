@@ -13,17 +13,17 @@ from app.infrastructure.database.models.submenu import Submenu
 class SubmenuRepository(SQLAlchemyBaseGateway):
     async def get_submenus(self) -> Sequence[Submenu]:
         query = select(Submenu).options(
-            undefer(Submenu.dish_count),
+            undefer(Submenu.dishes_count),
         )
         result = await self._session.execute(query)
         return result.scalars().all()
 
-    async def get_submenu(self, submenu_id: UUID) -> Submenu:
+    async def get_submenu(self, submenu_id: UUID) -> Submenu | None:
         query = (
             select(Submenu)
             .where(Submenu.id == submenu_id)
             .options(
-                undefer(Submenu.dish_count),
+                undefer(Submenu.dishes_count),
             )
         )
         result = await self._session.execute(query)
@@ -45,14 +45,14 @@ class SubmenuRepository(SQLAlchemyBaseGateway):
             .returning(Submenu)
         )
         result = await self._session.execute(stmt)
-        return result.scalar()
+        return result.scalar_one()
 
     async def update_submenu(
         self,
         submenu_id: UUID,
         title: str | None = None,
         description: str | None = None,
-    ) -> Submenu:
+    ) -> Submenu | None:
         values = {}
         if title:
             values.update({'title': title})

@@ -1,31 +1,42 @@
-from typing import List
 from uuid import UUID
 
 from fastapi import Body
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
+
+from app.application.models.dish import Dish
+from app.application.models.submenu import Submenu
+
+
+class BaseMenu:
+    id: UUID
+    title: str
+    description: str
+
+
+class SubmenuWithDishes(Submenu):
+    dishes: list[Dish]
 
 
 class SubmenuWithDishCount(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: UUID
-    dish_count: int = Field(serialization_alias='dishes_count')
+    dishes_count: int
 
 
-class Menu(BaseModel):
+class Menu(BaseMenu, BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    id: UUID
-    title: str
-    description: str
-    submenus: List[SubmenuWithDishCount]
+    submenus: list[SubmenuWithDishCount]
 
 
-class MenuWithoutSubmenus(BaseModel):
+class MenuWithoutSubmenus(BaseMenu, BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    id: UUID
-    title: str
-    description: str
     submenus_count: int
     dishes_count: int
+
+
+class MenuWithAllData(BaseMenu, BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    submenus: list[SubmenuWithDishes]
 
 
 class MenuCreate(BaseModel):

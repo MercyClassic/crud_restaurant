@@ -11,6 +11,10 @@ class MenuUsecaseInterface(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def get_menus_with_all_data(self) -> Sequence[Menu]:
+        raise NotImplementedError
+
+    @abstractmethod
     async def get_menu(self, menu_id: UUID) -> Menu:
         raise NotImplementedError
 

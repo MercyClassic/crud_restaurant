@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from fastapi import Body
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
 
 class Submenu(BaseModel):
@@ -18,7 +18,7 @@ class SubmenuWithDishCount(BaseModel):
     title: str
     description: str
     menu_id: UUID
-    dish_count: int = Field(serialization_alias='dishes_count')
+    dishes_count: int
 
 
 class SubmenuCreate(BaseModel):

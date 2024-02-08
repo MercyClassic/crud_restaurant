@@ -8,6 +8,7 @@ from app.application.models.menu import (
     MenuCreate,
     MenuUpdatePatch,
     MenuUpdatePut,
+    MenuWithAllData,
     MenuWithoutSubmenus,
 )
 from app.domain.interfaces.usecases.menu import MenuUsecaseInterface
@@ -25,6 +26,19 @@ router = APIRouter(
         },
     },
 )
+
+
+@router.get(
+    '/menus_all_data',
+    tags=['GET'],
+    response_model=list[MenuWithAllData],
+    status_code=200,
+)
+async def menus_with_all_data(
+    menu_usecase: Annotated[MenuUsecaseInterface, Depends()],
+):
+    data = await menu_usecase.get_menus_with_all_data()
+    return data
 
 
 @router.get(

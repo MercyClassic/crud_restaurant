@@ -16,7 +16,7 @@ class DishRepository(SQLAlchemyBaseGateway):
         result = await self._session.execute(query)
         return result.scalars().all()
 
-    async def get_dish(self, dish_id: UUID) -> Dish:
+    async def get_dish(self, dish_id: UUID) -> Dish | None:
         query = select(Dish).where(Dish.id == dish_id)
         result = await self._session.execute(query)
         return result.scalar()
@@ -39,7 +39,7 @@ class DishRepository(SQLAlchemyBaseGateway):
             .returning(Dish)
         )
         result = await self._session.execute(stmt)
-        return result.scalar()
+        return result.scalar_one()
 
     async def update_dish(
         self,
@@ -47,7 +47,7 @@ class DishRepository(SQLAlchemyBaseGateway):
         title: str | None = None,
         description: str | None = None,
         price: Decimal | None = None,
-    ) -> Dish:
+    ) -> Dish | None:
         values = {}
         if title:
             values.update({'title': title})

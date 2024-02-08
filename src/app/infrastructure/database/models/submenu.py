@@ -1,4 +1,3 @@
-from typing import List
 from uuid import UUID, uuid4
 
 from sqlalchemy import ForeignKey, select
@@ -22,9 +21,9 @@ class Submenu(Base):
         ),
     )
 
-    dishes: Mapped[List['Dish']] = relationship(backref='submenu')
+    dishes: Mapped[list['Dish']] = relationship(backref='submenu')
 
-    dish_count: Mapped[int] = column_property(
+    dishes_count: Mapped[int] = column_property(
         select(count(Dish.id)).where(Dish.submenu_id == id).scalar_subquery(),
         deferred=True,
     )

@@ -8,5 +8,5 @@ class JSONEncoder:
         self._data = jsonable_encoder(data)
 
     @property
-    def data(self):
+    def data(self) -> Any:
         return self._data

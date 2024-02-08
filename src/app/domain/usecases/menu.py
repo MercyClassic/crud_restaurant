@@ -29,6 +29,17 @@ class MenuUsecase:
             menus = json.loads(menus)
         return menus
 
+    async def get_menus_with_all_data(self) -> Sequence[Menu]:
+        menus = self._cache.get('menus-all-data')
+        if not menus:
+            menus = await self._uow.menu_repo.get_menus_with_all_data()
+            encoder = JSONEncoder(menus)
+            menus = encoder.data
+            self._cache.set('menus-all-data', json.dumps(menus), ex=1)
+        else:
+            menus = json.loads(menus)
+        return menus
+
     async def get_menu(self, menu_id: UUID) -> Menu:
         menu = self._cache.get(f'menu-{menu_id}')
         if not menu:
