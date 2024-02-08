@@ -152,3 +152,39 @@ async def test_delete_menu(
     response = await client.delete(url)
     assert response.status_code == 200
     assert await get_menu_count() == 0
+
+
+async def test_get_menus_with_all_data(
+    client: AsyncClient,
+    menu: UUID,
+    submenu: tuple[UUID, UUID],
+    dish: UUID,
+):
+    _, submenu_id = submenu
+    url = reverse('menus_with_all_data')
+    response = await client.get(url)
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            'id': menu,
+            'title': 'Menu 1',
+            'description': 'Desc 1',
+            'submenus': [
+                {
+                    'id': submenu_id,
+                    'title': 'Submenu 1',
+                    'description': 'Desc 1',
+                    'menu_id': menu,
+                    'dishes': [
+                        {
+                            'id': dish,
+                            'title': 'Dish 1',
+                            'description': 'Desc 1',
+                            'price': '123.12',
+                            'submenu_id': submenu_id,
+                        },
+                    ],
+                },
+            ],
+        },
+    ]

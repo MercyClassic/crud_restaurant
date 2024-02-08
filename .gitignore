@@ -6,3 +6,4 @@ media
 dev
 .pytest_cache
 .mypy_cache
+celerybeat-schedule*
