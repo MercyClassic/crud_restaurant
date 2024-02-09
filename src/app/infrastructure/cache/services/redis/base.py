@@ -3,7 +3,7 @@ from typing import Any
 from redis import Redis
 
 
-class RedisCacheService:
+class BaseRedisCacheService:
     def __init__(self, cache: Redis):
         self._cache = cache
 

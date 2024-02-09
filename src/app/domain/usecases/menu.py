@@ -4,7 +4,7 @@ from uuid import UUID
 
 from app.application.encoders.json import JSONEncoder
 from app.domain.exceptions.menu import MenuNotFound
-from app.infrastructure.cache.interface import CacheServiceInterface
+from app.infrastructure.cache.interfaces.menu import MenuCacheServiceInterface
 from app.infrastructure.database.interfaces.uow.uow import UoWInterface
 from app.infrastructure.database.models import Menu
 
@@ -13,42 +13,49 @@ class MenuUsecase:
     def __init__(
         self,
         uow: UoWInterface,
-        cache: CacheServiceInterface,
+        cache: MenuCacheServiceInterface,
     ):
         self._uow = uow
         self._cache = cache
 
     async def get_menus(self) -> Sequence[Menu]:
-        menus = self._cache.get('menus')
+        menus = self._cache.get_menus()
         if not menus:
             menus = await self._uow.menu_repo.get_menus()
             encoder = JSONEncoder(menus)
             menus = encoder.data
-            self._cache.set('menus', json.dumps(menus), ex=30)
+            self._cache.set_menus(json.dumps(menus))
         else:
             menus = json.loads(menus)
         return menus
 
+    def _synchronize_dish_prices(self, menus: list[dict]) -> None:
+        for menu in menus:
+            for submenu in menu.get('submenus', []):
+                for dish in submenu.get('dishes', []):
+                    dish['price'] *= 1 - self._cache.get_discount_for_dish(dish['id'])
+
     async def get_menus_with_all_data(self) -> Sequence[Menu]:
-        menus = self._cache.get('menus-all-data')
+        menus = self._cache.get_menus_with_all_data()
         if not menus:
             menus = await self._uow.menu_repo.get_menus_with_all_data()
             encoder = JSONEncoder(menus)
             menus = encoder.data
-            self._cache.set('menus-all-data', json.dumps(menus), ex=1)
+            self._synchronize_dish_prices(menus)
+            self._cache.set_menus_with_all_data(json.dumps(menus))
         else:
             menus = json.loads(menus)
         return menus
 
     async def get_menu(self, menu_id: UUID) -> Menu:
-        menu = self._cache.get(f'menu-{menu_id}')
+        menu = self._cache.get_menu(menu_id)
         if not menu:
             menu = await self._uow.menu_repo.get_menu(menu_id)
             if not menu:
                 raise MenuNotFound
             encoder = JSONEncoder(menu)
             menu = encoder.data
-            self._cache.set(f'menu-{menu_id}', json.dumps(menu), ex=30)
+            self._cache.set_menu(menu_id, json.dumps(menu))
         else:
             menu = json.loads(menu)
         return menu
@@ -64,7 +71,6 @@ class MenuUsecase:
         )
         await self._uow.commit()
         menu = await self._uow.menu_repo.get_menu(menu.id)
-        self._cache.delete('menus')
         return menu
 
     async def update_menu(
@@ -80,19 +86,8 @@ class MenuUsecase:
         )
         await self._uow.commit()
         menu = await self._uow.menu_repo.get_menu(menu.id)
-        self._cache.delete('menus')
-        self._cache.delete(f'menu-{menu_id}')
         return menu
 
     async def delete_menu(self, menu_id: UUID) -> None:
         await self._uow.menu_repo.delete_menu(menu_id)
         await self._uow.commit()
-        self._invalidate_cache_after_delete_menu(menu_id)
-
-    def _invalidate_cache_after_delete_menu(self, menu_id: UUID):
-        self._cache.delete('menus')
-        self._cache.delete(f'menu-{menu_id}')
-        self._cache.delete('submenus')
-        self._cache.delete('dishes')
-        self._cache.delete_by_pattern(f'submenu-*_menu-{menu_id}')
-        self._cache.delete_by_pattern(f'dish-*_submenu-*_menu-{menu_id}')

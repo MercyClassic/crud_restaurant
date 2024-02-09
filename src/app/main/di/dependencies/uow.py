@@ -4,7 +4,7 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.infrastructure.database.uow import UoW
-from app.main.di.stub import get_session_stub
+from app.main.di.dependencies.stubs.session import get_session_stub
 
 
 async def get_uow(

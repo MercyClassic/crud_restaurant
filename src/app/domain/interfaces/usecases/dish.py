@@ -15,7 +15,6 @@ class DishUsecaseInterface(ABC):
     async def create_dish(
         self,
         submenu_id: UUID,
-        menu_id: UUID,
         title: str,
         description: str,
         price: Decimal,
@@ -35,8 +34,6 @@ class DishUsecaseInterface(ABC):
     async def update_dish(
         self,
         dish_id: UUID,
-        submenu_id: UUID,
-        menu_id: UUID,
         title: str | None,
         description: str | None,
         price: Decimal | None,
@@ -47,7 +44,5 @@ class DishUsecaseInterface(ABC):
     async def delete_dish(
         self,
         dish_id: UUID,
-        submenu_id: UUID,
-        menu_id: UUID,
     ) -> None:
         raise NotImplementedError

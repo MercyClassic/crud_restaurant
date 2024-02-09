@@ -31,7 +31,6 @@ class SubmenuUsecaseInterface(ABC):
     async def update_submenu(
         self,
         submenu_id: UUID,
-        menu_id: UUID,
         title: str | None,
         description: str | None,
     ) -> Submenu:
@@ -41,6 +40,5 @@ class SubmenuUsecaseInterface(ABC):
     async def delete_submenu(
         self,
         submenu_id: UUID,
-        menu_id: UUID,
     ) -> None:
         raise NotImplementedError

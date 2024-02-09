@@ -2,9 +2,11 @@ from typing import Annotated, Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
+from fastapi.background import BackgroundTasks
 
 from app.application.models.dish import Dish, DishCreate, DishUpdatePatch, DishUpdatePut
 from app.domain.interfaces.usecases.dish import DishUsecaseInterface
+from app.infrastructure.cache.interfaces.dish import DishCacheServiceInterface
 
 router = APIRouter(
     tags=['dish'],
@@ -45,13 +47,19 @@ async def create_dish(
     submenu_id: UUID,
     dish_data: DishCreate,
     dish_usecase: Annotated[DishUsecaseInterface, Depends()],
+    dish_cache_service: Annotated[DishCacheServiceInterface, Depends()],
+    background_tasks: BackgroundTasks,
 ) -> Any:
     data = await dish_usecase.create_dish(
         submenu_id=submenu_id,
-        menu_id=menu_id,
         title=dish_data.title,
         description=dish_data.description,
         price=dish_data.price,
+    )
+    background_tasks.add_task(
+        dish_cache_service.invalidate_cache_after_create_dish,
+        menu_id,
+        submenu_id,
     )
     return data
 
@@ -84,14 +92,20 @@ async def put_dish(
     dish_id: UUID,
     update_data: DishUpdatePut,
     dish_usecase: Annotated[DishUsecaseInterface, Depends()],
+    dish_cache_service: Annotated[DishCacheServiceInterface, Depends()],
+    background_tasks: BackgroundTasks,
 ) -> Any:
     data = await dish_usecase.update_dish(
         dish_id,
-        submenu_id=submenu_id,
-        menu_id=menu_id,
         title=update_data.title,
         description=update_data.description,
         price=update_data.price,
+    )
+    background_tasks.add_task(
+        dish_cache_service.invalidate_cache_after_update_dish,
+        dish_id,
+        menu_id,
+        submenu_id,
     )
     return data
 
@@ -108,14 +122,20 @@ async def patch_dish(
     dish_id: UUID,
     update_data: DishUpdatePatch,
     dish_usecase: Annotated[DishUsecaseInterface, Depends()],
+    dish_cache_service: Annotated[DishCacheServiceInterface, Depends()],
+    background_tasks: BackgroundTasks,
 ) -> Any:
     data = await dish_usecase.update_dish(
         dish_id=dish_id,
-        submenu_id=submenu_id,
-        menu_id=menu_id,
         title=update_data.title,
         description=update_data.description,
         price=update_data.price,
+    )
+    background_tasks.add_task(
+        dish_cache_service.invalidate_cache_after_update_dish,
+        dish_id,
+        submenu_id,
+        menu_id,
     )
     return data
 
@@ -131,9 +151,15 @@ async def delete_dish(
     submenu_id: UUID,
     dish_id: UUID,
     dish_usecase: Annotated[DishUsecaseInterface, Depends()],
+    dish_cache_service: Annotated[DishCacheServiceInterface, Depends()],
+    background_tasks: BackgroundTasks,
 ) -> None:
     await dish_usecase.delete_dish(
         dish_id=dish_id,
-        submenu_id=submenu_id,
-        menu_id=menu_id,
+    )
+    background_tasks.add_task(
+        dish_cache_service.invalidate_cache_after_delete_dish,
+        dish_id,
+        submenu_id,
+        menu_id,
     )

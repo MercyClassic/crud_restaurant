@@ -14,8 +14,8 @@ from app.application.synchronizer.interfaces.repositories.sync import (
 )
 from app.application.synchronizer.models import Discount, Dish, Menu, Submenu
 from app.application.synchronizer.repositories.sync import SyncRepository
-from app.infrastructure.cache.interface import CacheServiceInterface
-from app.infrastructure.cache.redis.service import RedisCacheService
+from app.infrastructure.cache.interfaces.base import CacheServiceInterface
+from app.infrastructure.cache.services.redis.base import BaseRedisCacheService
 from app.infrastructure.database.database import create_async_session_maker
 
 
@@ -142,11 +142,15 @@ class SynchronizerDB:
 
     async def run(self) -> None:
         await self.parse_data_to_sync_db()
+
+        self._cache.delete_by_pattern('*')
         await self._sync_repo.clear_db()
+
         await self._sync_repo.bulk_insert_menus(self._menus)
         await self._sync_repo.bulk_insert_submenus(self._submenus)
         await self._sync_repo.bulk_insert_dishes(self._dishes)
         await self._sync_repo.commit()
+
         for discount in self._discounts:
             self._cache.set(f'discount_for_{discount.dish_id}', discount.value, ex=15)
 
@@ -168,7 +172,7 @@ def synchronize_db() -> None:
     async_session = async_session_maker()
     sync_repo = SyncRepository(async_session)
 
-    cache = RedisCacheService(
+    cache = BaseRedisCacheService(
         Redis(
             os.environ['REDIS_HOST'],
             decode_responses=True,

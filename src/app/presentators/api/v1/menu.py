@@ -2,6 +2,7 @@ from typing import Annotated, Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
+from fastapi.background import BackgroundTasks
 
 from app.application.models.menu import (
     Menu,
@@ -12,6 +13,7 @@ from app.application.models.menu import (
     MenuWithoutSubmenus,
 )
 from app.domain.interfaces.usecases.menu import MenuUsecaseInterface
+from app.infrastructure.cache.interfaces.menu import MenuCacheServiceInterface
 
 router = APIRouter(
     tags=['menu'],
@@ -63,10 +65,15 @@ async def get_menus(
 async def create_menu(
     menu_data: MenuCreate,
     menu_usecase: Annotated[MenuUsecaseInterface, Depends()],
+    menu_cache_service: Annotated[MenuCacheServiceInterface, Depends()],
+    background_tasks: BackgroundTasks,
 ) -> Any:
     data = await menu_usecase.create_menu(
         title=menu_data.title,
         description=menu_data.description,
+    )
+    background_tasks.add_task(
+        menu_cache_service.invalidate_cache_after_create_menu,
     )
     return data
 
@@ -95,11 +102,17 @@ async def put_menu(
     menu_id: UUID,
     update_data: MenuUpdatePut,
     menu_usecase: Annotated[MenuUsecaseInterface, Depends()],
+    menu_cache_service: Annotated[MenuCacheServiceInterface, Depends()],
+    background_tasks: BackgroundTasks,
 ) -> Any:
     data = await menu_usecase.update_menu(
         menu_id=menu_id,
         title=update_data.title,
         description=update_data.description,
+    )
+    background_tasks.add_task(
+        menu_cache_service.invalidate_cache_after_update_menu,
+        menu_id,
     )
     return data
 
@@ -114,11 +127,17 @@ async def patch_menu(
     menu_id: UUID,
     update_data: MenuUpdatePatch,
     menu_usecase: Annotated[MenuUsecaseInterface, Depends()],
+    menu_cache_service: Annotated[MenuCacheServiceInterface, Depends()],
+    background_tasks: BackgroundTasks,
 ) -> Any:
     data = await menu_usecase.update_menu(
         menu_id=menu_id,
         title=update_data.title,
         description=update_data.description,
+    )
+    background_tasks.add_task(
+        menu_cache_service.invalidate_cache_after_update_menu,
+        menu_id,
     )
     return data
 
@@ -132,5 +151,11 @@ async def patch_menu(
 async def delete_menu(
     menu_id: UUID,
     menu_usecase: Annotated[MenuUsecaseInterface, Depends()],
+    menu_cache_service: Annotated[MenuCacheServiceInterface, Depends()],
+    background_tasks: BackgroundTasks,
 ) -> None:
     await menu_usecase.delete_menu(menu_id)
+    background_tasks.add_task(
+        menu_cache_service.invalidate_cache_after_delete_menu,
+        menu_id,
+    )

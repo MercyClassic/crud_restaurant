@@ -2,6 +2,7 @@ from typing import Annotated, Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
+from fastapi.background import BackgroundTasks
 
 from app.application.models.submenu import (
     Submenu,
@@ -11,6 +12,7 @@ from app.application.models.submenu import (
     SubmenuWithDishCount,
 )
 from app.domain.interfaces.usecases.submenu import SubmenuUsecaseInterface
+from app.infrastructure.cache.interfaces.submenu import SubmenuCacheServiceInterface
 
 router = APIRouter(
     tags=['submenu'],
@@ -50,11 +52,17 @@ async def create_submenu(
     menu_id: UUID,
     submenu_data: SubmenuCreate,
     submenu_usecase: Annotated[SubmenuUsecaseInterface, Depends()],
+    submenu_cache_service: Annotated[SubmenuCacheServiceInterface, Depends()],
+    background_tasks: BackgroundTasks,
 ) -> Any:
     data = await submenu_usecase.create_submenu(
         menu_id=menu_id,
         title=submenu_data.title,
         description=submenu_data.description,
+    )
+    background_tasks.add_task(
+        submenu_cache_service.invalidate_cache_after_create_submenu,
+        menu_id,
     )
     return data
 
@@ -88,12 +96,18 @@ async def put_submenu(
     submenu_id: UUID,
     update_data: SubmenuUpdatePut,
     submenu_usecase: Annotated[SubmenuUsecaseInterface, Depends()],
+    submenu_cache_service: Annotated[SubmenuCacheServiceInterface, Depends()],
+    background_tasks: BackgroundTasks,
 ) -> Any:
     data = await submenu_usecase.update_submenu(
         submenu_id=submenu_id,
-        menu_id=menu_id,
         title=update_data.title,
         description=update_data.description,
+    )
+    background_tasks.add_task(
+        submenu_cache_service.invalidate_cache_after_update_submenu,
+        submenu_id,
+        menu_id,
     )
     return data
 
@@ -109,12 +123,18 @@ async def patch_submenu(
     submenu_id: UUID,
     update_data: SubmenuUpdatePatch,
     submenu_usecase: Annotated[SubmenuUsecaseInterface, Depends()],
+    submenu_cache_service: Annotated[SubmenuCacheServiceInterface, Depends()],
+    background_tasks: BackgroundTasks,
 ) -> Any:
     data = await submenu_usecase.update_submenu(
         submenu_id=submenu_id,
-        menu_id=menu_id,
         title=update_data.title,
         description=update_data.description,
+    )
+    background_tasks.add_task(
+        submenu_cache_service.invalidate_cache_after_update_submenu,
+        submenu_id,
+        menu_id,
     )
     return data
 
@@ -129,8 +149,14 @@ async def delete_submenu(
     menu_id: UUID,
     submenu_id: UUID,
     submenu_usecase: Annotated[SubmenuUsecaseInterface, Depends()],
+    submenu_cache_service: Annotated[SubmenuCacheServiceInterface, Depends()],
+    background_tasks: BackgroundTasks,
 ) -> None:
     await submenu_usecase.delete_submenu(
         submenu_id=submenu_id,
-        menu_id=menu_id,
+    )
+    background_tasks.add_task(
+        submenu_cache_service.invalidate_cache_after_delete_submenu,
+        submenu_id,
+        menu_id,
     )

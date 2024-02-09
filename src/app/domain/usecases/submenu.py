@@ -4,7 +4,7 @@ from uuid import UUID
 
 from app.application.encoders.json import JSONEncoder
 from app.domain.exceptions.submenu import SubmenuNotFound
-from app.infrastructure.cache.interface import CacheServiceInterface
+from app.infrastructure.cache.interfaces.submenu import SubmenuCacheServiceInterface
 from app.infrastructure.database.interfaces.uow.uow import UoWInterface
 from app.infrastructure.database.models import Submenu
 
@@ -13,18 +13,18 @@ class SubmenuUsecase:
     def __init__(
         self,
         uow: UoWInterface,
-        cache: CacheServiceInterface,
+        cache: SubmenuCacheServiceInterface,
     ):
         self._uow = uow
         self._cache = cache
 
     async def get_submenus(self) -> Sequence[Submenu]:
-        submenus = self._cache.get('submenus')
+        submenus = self._cache.get_submenus()
         if not submenus:
             submenus = await self._uow.submenu_repo.get_submenus()
             encoder = JSONEncoder(submenus)
             submenus = encoder.data
-            self._cache.set('submenus', json.dumps(submenus), ex=30)
+            self._cache.set_submenus(json.dumps(submenus))
         else:
             submenus = json.loads(submenus)
         return submenus
@@ -34,18 +34,14 @@ class SubmenuUsecase:
         submenu_id: UUID,
         menu_id: UUID,
     ) -> Submenu:
-        submenu = self._cache.get(f'submenu-{submenu_id}_menu-{menu_id}')
+        submenu = self._cache.get_submenu(submenu_id, menu_id)
         if not submenu:
             submenu = await self._uow.submenu_repo.get_submenu(submenu_id)
             if not submenu:
                 raise SubmenuNotFound
             encoder = JSONEncoder(submenu)
             submenu = encoder.data
-            self._cache.set(
-                f'submenu-{submenu_id}_menu-{menu_id}',
-                json.dumps(submenu),
-                ex=30,
-            )
+            self._cache.set_submenu(submenu_id, menu_id, json.dumps(submenu))
         else:
             submenu = json.loads(submenu)
         return submenu
@@ -63,15 +59,11 @@ class SubmenuUsecase:
         )
         await self._uow.commit()
         submenu = await self._uow.submenu_repo.get_submenu(submenu.id)
-        self._cache.delete('submenus')
-        self._cache.delete('menus')
-        self._cache.delete(f'menu-{menu_id}')
         return submenu
 
     async def update_submenu(
         self,
         submenu_id: UUID,
-        menu_id: UUID,
         title: str | None,
         description: str | None,
     ) -> Submenu:
@@ -82,27 +74,11 @@ class SubmenuUsecase:
         )
         await self._uow.commit()
         submenu = await self._uow.submenu_repo.get_submenu(submenu.id)
-        self._cache.delete('submenus')
-        self._cache.delete(f'submenu-{submenu_id}_menu-{menu_id}')
         return submenu
 
     async def delete_submenu(
         self,
         submenu_id: UUID,
-        menu_id: UUID,
     ) -> None:
         await self._uow.submenu_repo.delete_submenu(submenu_id)
         await self._uow.commit()
-        self._invalidate_cache_after_delete_submenu(submenu_id, menu_id)
-
-    def _invalidate_cache_after_delete_submenu(
-        self,
-        submenu_id: UUID,
-        menu_id: UUID,
-    ):
-        self._cache.delete('submenus')
-        self._cache.delete(f'submenu-{submenu_id}_menu-{menu_id}')
-        self._cache.delete('menus')
-        self._cache.delete(f'menu-{menu_id}')
-        self._cache.delete('dishes')
-        self._cache.delete_by_pattern(f'dish-*_submenu-{submenu_id}_menu-{menu_id}')

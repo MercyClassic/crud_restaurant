@@ -1,7 +1,7 @@
 import asyncio
 import os
 from functools import partial
-from typing import Any, AsyncGenerator, Generator
+from typing import Any, AsyncGenerator, Generator, Iterable
 
 import pytest
 from httpx import AsyncClient
@@ -13,9 +13,9 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.pool import NullPool
 
-from app.infrastructure.cache.interface import CacheServiceInterface
 from app.infrastructure.database.models import Base
-from app.main.di.stub import get_session_stub
+from app.main.di.dependencies.stubs.cache import CacheInstance
+from app.main.di.dependencies.stubs.session import get_session_stub
 from app.main.main import app
 
 test_engine = create_async_engine(os.environ['test_db_uri'], poolclass=NullPool)
@@ -54,6 +54,9 @@ class CacheMock:
     def delete_by_pattern(self, *args, **kwargs) -> Any:
         pass
 
+    def keys(self, *args, **kwargs) -> Iterable:
+        return []
+
 
 def get_cache_mock():
     return CacheMock()
@@ -65,7 +68,7 @@ app.dependency_overrides[get_session_stub] = partial(
     get_test_async_session,
     test_async_session_maker,
 )
-app.dependency_overrides[CacheServiceInterface] = get_cache_mock
+app.dependency_overrides[CacheInstance] = get_cache_mock
 
 
 @pytest.fixture(autouse=True, scope='function')
