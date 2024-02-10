@@ -25,10 +25,8 @@ class DishUsecase:
             dishes = await self._uow.dish_repo.get_dishes()
             encoder = JSONEncoder(dishes)
             dishes = encoder.data
-            '----------------------'
             for dish in dishes:
-                dish['price'] *= 1 - self._cache.get_discount_for_dish(dish['id'])
-            '----------------------'
+                dish['price'] *= 1 - self._cache.get_discount_for_dish(dish['id']) / 100
             self._cache.set_dishes(json.dumps(dishes))
         else:
             dishes = json.loads(dishes)
@@ -47,6 +45,7 @@ class DishUsecase:
                 raise DishNotFound
             encoder = JSONEncoder(dish)
             dish = encoder.data
+            dish['price'] *= 1 - self._cache.get_discount_for_dish(dish['id']) / 100
             self._cache.set_dish(dish_id, submenu_id, menu_id, dish_data=json.dumps(dish))
         else:
             dish = json.loads(dish)

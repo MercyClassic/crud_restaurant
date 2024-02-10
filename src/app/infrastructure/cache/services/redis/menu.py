@@ -50,5 +50,5 @@ class MenuRedisCacheService(BaseRedisCacheService):
         self.delete_by_pattern(f'submenu-*_menu-{menu_id}')
         self.delete_by_pattern(f'dish-*_submenu-*_menu-{menu_id}')
 
-    def get_discount_for_dish(self, dish_id: UUID) -> int | float:
-        return self._cache.get(f'discount_for_{dish_id}') or 0
+    def get_discount_for_dish(self, dish_id: UUID) -> float:
+        return float(self._cache.get(f'discount_for_{dish_id}') or 0)

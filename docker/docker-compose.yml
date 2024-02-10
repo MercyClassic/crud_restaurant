@@ -18,6 +18,12 @@ services:
     restart: always
     ports:
       - "5672:5672"
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
   postgres:
     container_name: postgres
     image: postgres:15.1-alpine
@@ -51,10 +57,13 @@ services:
     restart: always
     build:
       context: ../.
+    volumes:
+      - ../src/app/application/synchronizer/admin/Menu.xlsx:/app/src/app/application/synchronizer/admin/Menu.xlsx
     env_file:
       - ../.env
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
     command: celery -A app.application.synchronizer.worker.main worker -l info
   beat:
     container_name: beat

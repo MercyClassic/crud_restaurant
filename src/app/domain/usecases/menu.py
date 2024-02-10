@@ -33,7 +33,7 @@ class MenuUsecase:
         for menu in menus:
             for submenu in menu.get('submenus', []):
                 for dish in submenu.get('dishes', []):
-                    dish['price'] *= 1 - self._cache.get_discount_for_dish(dish['id'])
+                    dish['price'] *= 1 - self._cache.get_discount_for_dish(dish['id']) / 100
 
     async def get_menus_with_all_data(self) -> Sequence[Menu]:
         menus = self._cache.get_menus_with_all_data()

@@ -43,5 +43,5 @@ class MenuCacheServiceInterface(Protocol):
     ) -> None:
         raise NotImplementedError
 
-    def get_discount_for_dish(self, dish_id: UUID) -> int | float:
+    def get_discount_for_dish(self, dish_id: UUID) -> float:
         raise NotImplementedError

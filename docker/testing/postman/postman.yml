@@ -1,0 +1,51 @@
+services:
+  redis:
+    container_name: postman_redis
+    image: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+      start_period: 1s
+    networks:
+      - postman_test
+  postgres:
+    container_name: postman_postgres
+    image: postgres:15.1-alpine
+    restart: always
+    ports:
+      - "5432:5432"
+    env_file:
+      - ../../../.env
+    healthcheck:
+      test: [ "CMD-SHELL", "sh -c 'pg_isready -d postgres' || exit 1" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 3s
+    networks:
+      - postman_test
+  app:
+    container_name: postman_app
+    restart: always
+    build:
+      context: ../../../.
+    env_file:
+      - ../../../.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    networks:
+      - postman_test
+networks:
+  postman_test:
+    driver: bridge

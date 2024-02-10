@@ -1,10 +1,10 @@
 services:
-  test_postgres:
-    container_name: test_postgres
+  postgres:
+    container_name: pytest_postgres
     image: postgres:15.1-alpine
     restart: always
     env_file:
-      - ../.env
+      - ../../../.env
     healthcheck:
       test: [ "CMD-SHELL", "sh -c 'pg_isready -d postgres' || exit 1" ]
       interval: 5s
@@ -12,19 +12,19 @@ services:
       retries: 10
       start_period: 3s
     networks:
-      - test
-  test_app:
-    container_name: test_app
+      - pytest
+  app:
+    container_name: pytest_app
     build:
-      context: ../.
+      context: ../../../.
     env_file:
-      - ../.env
+      - ../../../.env
     depends_on:
-      test_postgres:
+      postgres:
         condition: service_healthy
     command: /bin/sh -c 'cd /app && pytest -s -v tests'
     networks:
-      - test
+      - pytest
 networks:
-  test:
+  pytest:
     driver: bridge

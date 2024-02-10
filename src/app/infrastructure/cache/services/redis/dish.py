@@ -31,8 +31,8 @@ class DishRedisCacheService(BaseRedisCacheService):
             ex=30,
         )
 
-    def get_discount_for_dish(self, dish_id: UUID) -> int | float:
-        return self._cache.get(f'discount_for_{dish_id}') or 0
+    def get_discount_for_dish(self, dish_id: UUID) -> float:
+        return float(self._cache.get(f'discount_for_{dish_id}') or 0)
 
     def invalidate_cache_after_create_dish(
         self,
