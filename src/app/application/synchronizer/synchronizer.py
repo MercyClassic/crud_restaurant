@@ -2,8 +2,7 @@ from decimal import Decimal
 from pathlib import Path
 from uuid import UUID
 
-import numpy as np
-import pandas as pd
+import gspread
 
 from app.application.synchronizer.interfaces.repositories.sync import (
     SyncRepositoryInterface,
@@ -86,14 +85,13 @@ class SynchronizerDB:
         )
 
     async def parse_data_to_sync_db(self) -> None:
-        table_path = f'{Path(__file__).parent}/admin/Menu.xlsx'
-        df = pd.read_excel(table_path, header=None)
-        df.replace(np.nan, None, inplace=True)
+        gs = gspread.service_account(filename=f'{Path(__file__).parent}/credentials.json')
+        sh = gs.open('Menu')
 
         menu_id: UUID = None  # type: ignore[assignment]
         submenu_id: UUID = None  # type: ignore[assignment]
-        for row in df.values:
-            if all([value is None for value in row[3:]]):
+        for row in sh.sheet1.get_values():
+            if all([value == '' for value in row[3:]]):
                 """Если все элементы после 3 являются None, то этот элемент - меню"""
                 menu_id = row[0].strip()
                 title = row[1].strip()
@@ -103,7 +101,7 @@ class SynchronizerDB:
                     title=title,
                     description=description,
                 )
-            elif all([value is None for value in row[4:]]):
+            elif all([value == '' for value in row[4:]]):
                 """Если все элементы после 4 являются None, то этот элемент - подменю"""
                 submenu_id = row[1].strip()
                 title = row[2].strip()
@@ -114,12 +112,12 @@ class SynchronizerDB:
                     description=description,
                     menu_id=menu_id,
                 )
-            elif all([value is None for value in row[:2]]):
+            elif all([value == '' for value in row[:2]]):
                 """Если первые два элемента являются None, то этот элемент - блюдо"""
                 dish_id = row[2].strip()
                 title = row[3].strip()
                 description = row[4].strip()
-                price = Decimal(row[5])
+                price = Decimal(row[5].replace(',', '.'))
                 discount_value = row[6]
                 self.add_dish(
                     entity_id=dish_id,
