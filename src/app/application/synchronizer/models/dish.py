@@ -12,4 +12,4 @@ class Dish:
     price: Decimal
     submenu_id: UUID
 
-    status: Literal['to_insert', 'to_update', 'no_modified'] = 'no_modified'
+    status: Literal['to_insert', 'to_update', 'no_modified'] = 'to_insert'
