@@ -4,7 +4,7 @@ from asgiref.sync import async_to_sync
 from celery import Celery
 from redis import Redis
 
-from app.application.synchronizer.repositories.sync import SyncRepository
+from app.application.synchronizer.db.uow import SynchronizerUow
 from app.application.synchronizer.synchronizer import SynchronizerDB
 from app.infrastructure.cache.services.redis.base import BaseRedisCacheService
 from app.infrastructure.database.database import create_async_session_maker
@@ -25,7 +25,7 @@ worker = create_celery_worker()
 def synchronize_db() -> None:
     async_session_maker = create_async_session_maker(os.environ['db_uri'])
     async_session = async_session_maker()
-    sync_repo = SyncRepository(async_session)
+    sync_repo = SynchronizerUow(async_session)
 
     cache = BaseRedisCacheService(
         Redis(

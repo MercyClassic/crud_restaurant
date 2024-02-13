@@ -57,8 +57,6 @@ services:
     restart: always
     build:
       context: ../.
-    volumes:
-      - ../src/app/application/synchronizer/admin/Menu.xlsx:/app/src/app/application/synchronizer/admin/Menu.xlsx
     env_file:
       - ../.env
     depends_on:
