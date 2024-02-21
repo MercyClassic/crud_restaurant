@@ -2,43 +2,39 @@ from abc import ABC, abstractmethod
 from typing import Sequence
 from uuid import UUID
 
-from app.infrastructure.database.models import Submenu
+from app.infrastructure.database.models import Menu
 
 
-class SubmenuUsecaseInterface(ABC):
+class MenuServiceInterface(ABC):
     @abstractmethod
-    async def get_submenus(self) -> Sequence[Submenu]:
+    async def get_menus(self) -> Sequence[Menu]:
         raise NotImplementedError
 
     @abstractmethod
-    async def get_submenu(
-        self,
-        submenu_id: UUID,
-        menu_id: UUID,
-    ) -> Submenu:
+    async def get_menus_with_all_data(self) -> Sequence[Menu]:
         raise NotImplementedError
 
     @abstractmethod
-    async def create_submenu(
+    async def get_menu(self, menu_id: UUID) -> Menu:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def create_menu(
         self,
-        menu_id: UUID,
         title: str,
         description: str,
-    ) -> Submenu:
+    ) -> Menu:
         raise NotImplementedError
 
     @abstractmethod
-    async def update_submenu(
+    async def update_menu(
         self,
-        submenu_id: UUID,
+        menu_id: UUID,
         title: str | None,
         description: str | None,
-    ) -> Submenu:
+    ) -> Menu:
         raise NotImplementedError
 
     @abstractmethod
-    async def delete_submenu(
-        self,
-        submenu_id: UUID,
-    ) -> None:
+    async def delete_menu(self, menu_id: UUID) -> None:
         raise NotImplementedError

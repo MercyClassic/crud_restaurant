@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 from fastapi.background import BackgroundTasks
 
 from app.application.models.dish import Dish, DishCreate, DishUpdatePatch, DishUpdatePut
-from app.domain.interfaces.usecases.dish import DishUsecaseInterface
+from app.domain.interfaces.services.dish import DishServiceInterface
 from app.infrastructure.cache.interfaces.dish import DishCacheServiceInterface
 
 router = APIRouter(
@@ -30,7 +30,7 @@ router = APIRouter(
     status_code=200,
 )
 async def get_dishes(
-    dish_usecase: Annotated[DishUsecaseInterface, Depends()],
+    dish_usecase: Annotated[DishServiceInterface, Depends()],
 ) -> Any:
     data = await dish_usecase.get_dishes()
     return data
@@ -46,7 +46,7 @@ async def create_dish(
     menu_id: UUID,
     submenu_id: UUID,
     dish_data: DishCreate,
-    dish_usecase: Annotated[DishUsecaseInterface, Depends()],
+    dish_usecase: Annotated[DishServiceInterface, Depends()],
     dish_cache_service: Annotated[DishCacheServiceInterface, Depends()],
     background_tasks: BackgroundTasks,
 ) -> Any:
@@ -74,7 +74,7 @@ async def get_dish(
     menu_id: UUID,
     submenu_id: UUID,
     dish_id: UUID,
-    dish_usecase: Annotated[DishUsecaseInterface, Depends()],
+    dish_usecase: Annotated[DishServiceInterface, Depends()],
 ) -> Any:
     data = await dish_usecase.get_dish(dish_id, submenu_id, menu_id)
     return data
@@ -91,7 +91,7 @@ async def put_dish(
     submenu_id: UUID,
     dish_id: UUID,
     update_data: DishUpdatePut,
-    dish_usecase: Annotated[DishUsecaseInterface, Depends()],
+    dish_usecase: Annotated[DishServiceInterface, Depends()],
     dish_cache_service: Annotated[DishCacheServiceInterface, Depends()],
     background_tasks: BackgroundTasks,
 ) -> Any:
@@ -121,7 +121,7 @@ async def patch_dish(
     submenu_id: UUID,
     dish_id: UUID,
     update_data: DishUpdatePatch,
-    dish_usecase: Annotated[DishUsecaseInterface, Depends()],
+    dish_usecase: Annotated[DishServiceInterface, Depends()],
     dish_cache_service: Annotated[DishCacheServiceInterface, Depends()],
     background_tasks: BackgroundTasks,
 ) -> Any:
@@ -150,7 +150,7 @@ async def delete_dish(
     menu_id: UUID,
     submenu_id: UUID,
     dish_id: UUID,
-    dish_usecase: Annotated[DishUsecaseInterface, Depends()],
+    dish_usecase: Annotated[DishServiceInterface, Depends()],
     dish_cache_service: Annotated[DishCacheServiceInterface, Depends()],
     background_tasks: BackgroundTasks,
 ) -> None:

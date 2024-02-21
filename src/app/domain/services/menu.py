@@ -9,7 +9,7 @@ from app.infrastructure.database.interfaces.uow.uow import UoWInterface
 from app.infrastructure.database.models import Menu
 
 
-class MenuUsecase:
+class MenuService:
     def __init__(
         self,
         uow: UoWInterface,

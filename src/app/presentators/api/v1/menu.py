@@ -12,7 +12,7 @@ from app.application.models.menu import (
     MenuWithAllData,
     MenuWithoutSubmenus,
 )
-from app.domain.interfaces.usecases.menu import MenuUsecaseInterface
+from app.domain.interfaces.services.menu import MenuServiceInterface
 from app.infrastructure.cache.interfaces.menu import MenuCacheServiceInterface
 
 router = APIRouter(
@@ -37,7 +37,7 @@ router = APIRouter(
     status_code=200,
 )
 async def menus_with_all_data(
-    menu_usecase: Annotated[MenuUsecaseInterface, Depends()],
+    menu_usecase: Annotated[MenuServiceInterface, Depends()],
 ):
     data = await menu_usecase.get_menus_with_all_data()
     return data
@@ -50,7 +50,7 @@ async def menus_with_all_data(
     status_code=200,
 )
 async def get_menus(
-    menu_usecase: Annotated[MenuUsecaseInterface, Depends()],
+    menu_usecase: Annotated[MenuServiceInterface, Depends()],
 ) -> Any:
     data = await menu_usecase.get_menus()
     return data
@@ -64,7 +64,7 @@ async def get_menus(
 )
 async def create_menu(
     menu_data: MenuCreate,
-    menu_usecase: Annotated[MenuUsecaseInterface, Depends()],
+    menu_usecase: Annotated[MenuServiceInterface, Depends()],
     menu_cache_service: Annotated[MenuCacheServiceInterface, Depends()],
     background_tasks: BackgroundTasks,
 ) -> Any:
@@ -86,7 +86,7 @@ async def create_menu(
 )
 async def get_menu(
     menu_id: UUID,
-    menu_usecase: Annotated[MenuUsecaseInterface, Depends()],
+    menu_usecase: Annotated[MenuServiceInterface, Depends()],
 ) -> Any:
     data = await menu_usecase.get_menu(menu_id)
     return data
@@ -101,7 +101,7 @@ async def get_menu(
 async def put_menu(
     menu_id: UUID,
     update_data: MenuUpdatePut,
-    menu_usecase: Annotated[MenuUsecaseInterface, Depends()],
+    menu_usecase: Annotated[MenuServiceInterface, Depends()],
     menu_cache_service: Annotated[MenuCacheServiceInterface, Depends()],
     background_tasks: BackgroundTasks,
 ) -> Any:
@@ -126,7 +126,7 @@ async def put_menu(
 async def patch_menu(
     menu_id: UUID,
     update_data: MenuUpdatePatch,
-    menu_usecase: Annotated[MenuUsecaseInterface, Depends()],
+    menu_usecase: Annotated[MenuServiceInterface, Depends()],
     menu_cache_service: Annotated[MenuCacheServiceInterface, Depends()],
     background_tasks: BackgroundTasks,
 ) -> Any:
@@ -150,7 +150,7 @@ async def patch_menu(
 )
 async def delete_menu(
     menu_id: UUID,
-    menu_usecase: Annotated[MenuUsecaseInterface, Depends()],
+    menu_usecase: Annotated[MenuServiceInterface, Depends()],
     menu_cache_service: Annotated[MenuCacheServiceInterface, Depends()],
     background_tasks: BackgroundTasks,
 ) -> None:

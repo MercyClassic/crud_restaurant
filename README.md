@@ -1,13 +1,15 @@
 **<h1> CRUD Restaurant </h1>**
 **<h2> Startup: </h2>**
 **<h3> Via docker: </h3>**
-- **<h4> Create .env file in the root dir by example (.env.example) </h3>**
+- **<h4> Create .env file in the root dir by example (.env.example) </h4>**
+- **<h4> Import credentials.json from google api in the application/synchronizer </h4>**
 - **<h4> ```cd docker``` </h4>**
 - **<h4> ```docker compose up --build``` </h4>**
 
 
 **<h3> Without docker: </h3>**
 - **<h4> Create .env file in the root dir by example (.env.example) </h3>**
+- **<h4> Import credentials.json from google api in the application/synchronizer </h4>**
 - **<h4> ```docker run -p 6379:6379 redis -d``` </h4>**
 - **<h4> ```docker run -p 5672:5672 rabbitmq -d``` </h4>**
 - **<h4> ```poetry install``` or ```pip install -r requirements.txt``` </h4>**
@@ -29,7 +31,7 @@
 - **<h3> Test scenario ```check dish and submenu count``` located in ```tests/api/v1/test_count_scenario.py``` </h3>**
 - **<h3> Django ```reverse()``` analogue located in ```tests/conftest.py``` </h3>**
 - **<h3> Database synchronization service with google sheets located in ```app/application/synchronizer/synchronizer.py``` </h3>**
-- **<h3> Discount (%) for dish storing in cache. Dish price calculating in DishUsecase (```app/domain/usecases/dish.py```) </h3>**
+- **<h3> Discount (%) for dish storing in cache. Dish price calculating in DishService (```app/domain/usecases/dish.py```) </h3>**
 
 **<h2> Stack </h2>**
 - **<h3> FastAPI </h3>**

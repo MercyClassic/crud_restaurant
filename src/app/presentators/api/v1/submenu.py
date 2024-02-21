@@ -11,7 +11,7 @@ from app.application.models.submenu import (
     SubmenuUpdatePut,
     SubmenuWithDishCount,
 )
-from app.domain.interfaces.usecases.submenu import SubmenuUsecaseInterface
+from app.domain.interfaces.services.submenu import SubmenuServiceInterface
 from app.infrastructure.cache.interfaces.submenu import SubmenuCacheServiceInterface
 
 router = APIRouter(
@@ -36,7 +36,7 @@ router = APIRouter(
     status_code=200,
 )
 async def get_submenus(
-    submenu_usecase: Annotated[SubmenuUsecaseInterface, Depends()],
+    submenu_usecase: Annotated[SubmenuServiceInterface, Depends()],
 ) -> Any:
     data = await submenu_usecase.get_submenus()
     return data
@@ -51,7 +51,7 @@ async def get_submenus(
 async def create_submenu(
     menu_id: UUID,
     submenu_data: SubmenuCreate,
-    submenu_usecase: Annotated[SubmenuUsecaseInterface, Depends()],
+    submenu_usecase: Annotated[SubmenuServiceInterface, Depends()],
     submenu_cache_service: Annotated[SubmenuCacheServiceInterface, Depends()],
     background_tasks: BackgroundTasks,
 ) -> Any:
@@ -76,7 +76,7 @@ async def create_submenu(
 async def get_submenu(
     menu_id: UUID,
     submenu_id: UUID,
-    submenu_usecase: Annotated[SubmenuUsecaseInterface, Depends()],
+    submenu_usecase: Annotated[SubmenuServiceInterface, Depends()],
 ) -> Any:
     data = await submenu_usecase.get_submenu(
         submenu_id=submenu_id,
@@ -95,7 +95,7 @@ async def put_submenu(
     menu_id: UUID,
     submenu_id: UUID,
     update_data: SubmenuUpdatePut,
-    submenu_usecase: Annotated[SubmenuUsecaseInterface, Depends()],
+    submenu_usecase: Annotated[SubmenuServiceInterface, Depends()],
     submenu_cache_service: Annotated[SubmenuCacheServiceInterface, Depends()],
     background_tasks: BackgroundTasks,
 ) -> Any:
@@ -122,7 +122,7 @@ async def patch_submenu(
     menu_id: UUID,
     submenu_id: UUID,
     update_data: SubmenuUpdatePatch,
-    submenu_usecase: Annotated[SubmenuUsecaseInterface, Depends()],
+    submenu_usecase: Annotated[SubmenuServiceInterface, Depends()],
     submenu_cache_service: Annotated[SubmenuCacheServiceInterface, Depends()],
     background_tasks: BackgroundTasks,
 ) -> Any:
@@ -148,7 +148,7 @@ async def patch_submenu(
 async def delete_submenu(
     menu_id: UUID,
     submenu_id: UUID,
-    submenu_usecase: Annotated[SubmenuUsecaseInterface, Depends()],
+    submenu_usecase: Annotated[SubmenuServiceInterface, Depends()],
     submenu_cache_service: Annotated[SubmenuCacheServiceInterface, Depends()],
     background_tasks: BackgroundTasks,
 ) -> None:

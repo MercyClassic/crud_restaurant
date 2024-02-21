@@ -10,7 +10,7 @@ from app.infrastructure.database.interfaces.uow.uow import UoWInterface
 from app.infrastructure.database.models import Dish
 
 
-class DishUsecase:
+class DishService:
     def __init__(
         self,
         uow: UoWInterface,

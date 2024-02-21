@@ -1,48 +1,44 @@
 from abc import ABC, abstractmethod
-from decimal import Decimal
 from typing import Sequence
 from uuid import UUID
 
-from app.infrastructure.database.models import Dish
+from app.infrastructure.database.models import Submenu
 
 
-class DishUsecaseInterface(ABC):
+class SubmenuServiceInterface(ABC):
     @abstractmethod
-    async def get_dishes(self) -> Sequence[Dish]:
+    async def get_submenus(self) -> Sequence[Submenu]:
         raise NotImplementedError
 
     @abstractmethod
-    async def create_dish(
+    async def get_submenu(
         self,
-        submenu_id: UUID,
-        title: str,
-        description: str,
-        price: Decimal,
-    ) -> Dish:
-        raise NotImplementedError
-
-    @abstractmethod
-    async def get_dish(
-        self,
-        dish_id: UUID,
         submenu_id: UUID,
         menu_id: UUID,
-    ) -> Dish:
+    ) -> Submenu:
         raise NotImplementedError
 
     @abstractmethod
-    async def update_dish(
+    async def create_submenu(
         self,
-        dish_id: UUID,
+        menu_id: UUID,
+        title: str,
+        description: str,
+    ) -> Submenu:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def update_submenu(
+        self,
+        submenu_id: UUID,
         title: str | None,
         description: str | None,
-        price: Decimal | None,
-    ) -> Dish:
+    ) -> Submenu:
         raise NotImplementedError
 
     @abstractmethod
-    async def delete_dish(
+    async def delete_submenu(
         self,
-        dish_id: UUID,
+        submenu_id: UUID,
     ) -> None:
         raise NotImplementedError

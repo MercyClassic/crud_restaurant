@@ -4,9 +4,9 @@ from typing import Any
 
 from fastapi import FastAPI
 
-from app.domain.interfaces.usecases.dish import DishUsecaseInterface
-from app.domain.interfaces.usecases.menu import MenuUsecaseInterface
-from app.domain.interfaces.usecases.submenu import SubmenuUsecaseInterface
+from app.domain.interfaces.services.dish import DishServiceInterface
+from app.domain.interfaces.services.menu import MenuServiceInterface
+from app.domain.interfaces.services.submenu import SubmenuServiceInterface
 from app.infrastructure.cache.interfaces.dish import DishCacheServiceInterface
 from app.infrastructure.cache.interfaces.menu import MenuCacheServiceInterface
 from app.infrastructure.cache.interfaces.submenu import SubmenuCacheServiceInterface
@@ -42,9 +42,9 @@ def init_dependencies(app: FastAPI) -> None:
         async_session_maker,
     )
     app.dependency_overrides[UoWInterface] = get_uow
-    app.dependency_overrides[DishUsecaseInterface] = get_dish_usecase
-    app.dependency_overrides[MenuUsecaseInterface] = get_menu_usecase
-    app.dependency_overrides[SubmenuUsecaseInterface] = get_submenu_usecase
+    app.dependency_overrides[DishServiceInterface] = get_dish_usecase
+    app.dependency_overrides[MenuServiceInterface] = get_menu_usecase
+    app.dependency_overrides[SubmenuServiceInterface] = get_submenu_usecase
     app.dependency_overrides[CacheInstance] = singleton(
         get_redis_instance(os.environ['REDIS_HOST']),
     )
